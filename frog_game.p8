@@ -339,6 +339,7 @@ function _update()
   end
 
   if btn(5) and not tongue_active and frog:is_grounded() then
+    sfx(0, 0, 0, 5)
     tongue_active = true
     tongue_retracting = false
     tongue_progress = 0
@@ -361,12 +362,14 @@ function _update()
       local tongue_y = frog.y + 2 + sin(cursor_angle / 360) * (tongue_progress * cursor_distance / tongue_max_progress)
 
       for obj in all(uncaught_objects) do
-        if aabb_collision({ x = tongue_x, y = tongue_y, width = 2, height = 2 }, obj) then
-          obj.caught = true
-          add(caught_objects, obj)
-          del(uncaught_objects, obj)
-          tongue_retracting = true
-          break
+        if not tongue_retracting then
+          if aabb_collision({ x = tongue_x, y = tongue_y, width = 2, height = 2 }, obj) then
+            obj.caught = true
+            add(caught_objects, obj)
+            del(uncaught_objects, obj)
+            tongue_retracting = true
+            sfx(0, 0, 7, 7)
+          end
         end
       end
     end
@@ -497,4 +500,4 @@ __gfx__
 00077000000000008000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00700700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __sfx__
-000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00030000012500e25014250252502b25000200002002425020250192500c250032500225001250002000020000200002000020000200002000020000200002000020000200002000020000200002000020000200
