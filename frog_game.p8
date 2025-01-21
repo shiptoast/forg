@@ -159,7 +159,7 @@ end
 
 function check_collision(obj1, obj2)
   if obj1.shape_type == "rect" and obj2.shape_type == "round" then
-    return rect_round_collision(obj, obj2)
+    return rect_round_collision(obj1, obj2)
   elseif obj1.shape_type == "round" and obj2.shape_type == "rect" then
     return rect_round_collision(obj2, obj1)
   elseif obj1.shape_type == "round" and obj2.shape_type == "round" then
