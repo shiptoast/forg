@@ -354,12 +354,9 @@ function _update()
       end
     else
       tongue_progress += 18
-      if tongue_progress >= tongue_max_progress then
-        tongue_retracting = true
-      end
 
-      local tongue_x = frog.x + 2 + cos(cursor_angle / 360) * (tongue_progress * cursor_distance / tongue_max_progress)
-      local tongue_y = frog.y + 2 + sin(cursor_angle / 360) * (tongue_progress * cursor_distance / tongue_max_progress)
+      local tongue_x = frog.x + cos(cursor_angle / 360) * (tongue_progress * cursor_distance / tongue_max_progress)
+      local tongue_y = frog.y + sin(cursor_angle / 360) * (tongue_progress * cursor_distance / tongue_max_progress)
 
       for obj in all(uncaught_objects) do
         if not tongue_retracting then
@@ -371,6 +368,10 @@ function _update()
             sfx(0, 0, 7, 7)
           end
         end
+      end
+
+      if tongue_progress >= tongue_max_progress then
+        tongue_retracting = true
       end
     end
 
