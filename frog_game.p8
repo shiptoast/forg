@@ -103,17 +103,15 @@ function make_random_obj()
   local y = 50 + rnd(20)
   local width = flr(rnd(5)) + 2
   local height = flr(rnd(5)) + 2
-  local is_round = rnd(1) > 0.7
   local color = flr(rnd(15)) + 1
-  -- local color = 9
+  -- local is_round = rnd(1) > 0.5
 
   -- if is_round then
-  --   return make_round(x, y, width, height, color)
+  --   grabbable = make_round(x, y, width, height, color)
   -- else
-  grabbable = make_rect(x, y, width, height, color)
-  -- grabbable:set_static(true)
-  return grabbable
+    grabbable = make_rect(x, y, width, height, color)
   -- end
+  return grabbable
 end
 
 function aabb_collision(obj1, obj2)
@@ -230,6 +228,14 @@ function resolve_rect_round_collision(rect, round)
 
       round.x += dx * overlap
       round.y += dy * overlap
+
+      if abs(dx) > abs(dy) then
+        return "horizontal"
+      elseif abs(dy) > abs(dx) then
+        return "vertical"
+      else
+        return "diagonal"
+      end
     end
   end
 end
@@ -249,9 +255,18 @@ function resolve_round_round_collision(round1, round2)
       round1.y -= dy * overlap / 2
       round2.x += dx * overlap / 2
       round2.y += dy * overlap / 2
+
+      if abs(dx) > abs(dy) then
+        return "horizontal"
+      elseif abs(dy) > abs(dx) then
+        return "vertical"
+      else
+        return "diagonal"
+      end
     end
   end
 end
+
 
 function _init()
   frog_x = 64
@@ -362,6 +377,7 @@ function _update()
         if not tongue_retracting then
           if aabb_collision({ x = tongue_x, y = tongue_y, width = 2, height = 2 }, obj) then
             obj.caught = true
+            obj:del_tag("grabbable")
             add(caught_objects, obj)
             del(uncaught_objects, obj)
             tongue_retracting = true
@@ -410,6 +426,7 @@ function _update()
     -- Create a round uncaught object
     local obj = make_random_obj()
     obj:set_static(true)
+    obj:set_tag("grabbable", true)
     obj.caught = false -- Add a caught state to the object
     obj.timer = 60 -- Timer for disappearance
     add(uncaught_objects, obj)
@@ -426,13 +443,14 @@ function _update()
   end
 
   for obj in all(renderables) do
-    if not (obj:is_static() or obj:is_grounded()) then
+    if not (obj:is_static() or obj:is_grounded() or obj:get_tag("grabbable")) then
       for other in all(renderables) do
         if obj != other then
           is_touching_object = check_collision(obj, other)
           if is_touching_object then
             dir = resolve_collision(obj, other)
             if dir == "vertical" and (other == tank_bottom or other:is_grounded()) then
+              obj.y -= 1;
               obj:set_grounded(true)
             end
           end
@@ -488,10 +506,7 @@ function _draw()
     line(frog.x + frog_direction, frog.y, tongue_x, tongue_y, 8)
   end
 
-  local cpu_usage = stat(1)
-  print("CPU: "..flr(cpu_usage).."%", 1, 1, 7)
-  print(frog:is_grounded(), 1, 8, 7)
-  print(object_spawn_timer, 1, 15, 7)
+  print("hi andrew", 1, 1, 7)
 end
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
