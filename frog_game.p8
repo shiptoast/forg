@@ -77,25 +77,36 @@ function make_rect(pos_x, pos_y, width, height, color)
   )
 end
 
-function make_round(pos_x, pos_y, width, height, color)
-  return Entity:new(
-    pos_x,
-    pos_y,
-    width,
-    height,
-    color,
-    function(self)
-      if self.debug_color != nil then draw_color = self.debug_color else draw_color = self.color end
-      ovalfill(
-        self.x - self.width / 2,
-        self.y - self.height / 2,
-        self.x + self.width / 2,
-        self.y + self.height / 2,
-        draw_color
-      )
-    end,
-    "round"
-  )
+function make_shades(pos_x, pos_y)
+  shades = make_rect(pos_x, pos_y, 8, 3, 3)
+  old_draw_func = shades.draw_func
+  shades.draw_func = function(self)
+    -- old_draw_func(self)
+    spr(4, self.x -5, self.y-3)
+    spr(5, self.x + 3, self.y-3)
+  end
+  return shades
+end
+
+function make_camera(pos_x, pos_y)
+  camera = make_rect(pos_x, pos_y, 8, 4, 3)
+  old_draw_func = camera.draw_func
+  camera.draw_func = function(self)
+    -- old_draw_func(self)
+    spr(2, self.x-4, self.y-5)
+    spr(3, self.x+4, self.y-5)
+  end
+  return camera
+end
+
+function make_watch(pos_x, pos_y)
+  watch = make_rect(pos_x, pos_y, 4, 4, 3)
+  old_draw_func = watch.draw_func
+  watch.draw_func = function(self)
+    -- old_draw_func(self)
+    spr(1, self.x-2, self.y-5)
+  end
+  return watch
 end
 
 function make_random_obj()
@@ -104,13 +115,20 @@ function make_random_obj()
   local width = flr(rnd(5)) + 2
   local height = flr(rnd(5)) + 2
   local color = flr(rnd(15)) + 1
+  local is_watch = rnd(1) <= 0.3
+  local is_cam = rnd(1) <= 0.2
+  local is_shades = rnd(1) <= 0.1
   -- local is_round = rnd(1) > 0.5
 
-  -- if is_round then
-  --   grabbable = make_round(x, y, width, height, color)
-  -- else
+  if is_shades then
+    grabbable = make_shades(x, y)
+  elseif is_cam then
+    grabbable = make_camera(x, y)
+  elseif is_watch then
+    grabbable = make_watch(x, y)
+  else
     grabbable = make_rect(x, y, width, height, color)
-  -- end
+  end
   return grabbable
 end
 
@@ -121,62 +139,8 @@ function aabb_collision(obj1, obj2)
          obj1.y + obj1.height / 2 > obj2.y - obj2.height / 2    -- obj1's bottom is below obj2's top
 end
 
-
-function rect_round_collision(rect, round)
-  if not aabb_collision(rect, round) then
-    return false
-  end
-
-  local closest_x = mid(rect.x - rect.width / 2, round.x, rect.x + rect.width / 2)
-  local closest_y = mid(rect.y - rect.height / 2, round.y, rect.y + rect.height / 2)
-
-  local dx = closest_x - round.x
-  local dy = closest_y - round.y
-
-  local rx = round.width / 2
-  local ry = round.height / 2
-  return (dx^2 / rx^2) + (dy^2 / ry^2) <= 1
-end
-
-function round_round_collision(round1, round2)
-  if not aabb_collision(round1, round2) then
-    return false
-  end
-
-  local dx = round1.x - round2.x
-  local dy = round1.y - round2.y
-
-  local rx1 = round1.width / 2
-  local ry1 = round1.height / 2
-  local rx2 = round2.width / 2
-  local ry2 = round2.height / 2
-
-  local distance = (dx^2 / (rx1 + rx2)^2) + (dy^2 / (ry1 + ry2)^2)
-  return distance <= 1
-end
-
 function check_collision(obj1, obj2)
-  if obj1.shape_type == "rect" and obj2.shape_type == "round" then
-    return rect_round_collision(obj1, obj2)
-  elseif obj1.shape_type == "round" and obj2.shape_type == "rect" then
-    return rect_round_collision(obj2, obj1)
-  elseif obj1.shape_type == "round" and obj2.shape_type == "round" then
-    return round_round_collision(obj1, obj2)
-  elseif obj1.shape_type == "rect" and obj2.shape_type == "rect" then
-    return aabb_collision(obj1, obj2)
-  end
-end
-
-function resolve_collision(obj1, obj2)
-  if obj1.shape_type == "rect" and obj2.shape_type == "round" then
-    resolve_rect_round_collision(obj1, obj2)
-  elseif obj1.shape_type == "round" and obj2.shape_type == "rect" then
-    resolve_rect_round_collision(obj2, obj1)
-  elseif obj1.shape_type == "round" and obj2.shape_type == "round" then
-    resolve_round_round_collision(obj1, obj2)
-  elseif obj1.shape_type == "rect" and obj2.shape_type == "rect" then
-    return resolve_aabb_collision(obj1, obj2)
-  end
+  return aabb_collision(obj1, obj2)
 end
 
 function resolve_aabb_collision(obj1, obj2)
@@ -212,61 +176,9 @@ function resolve_aabb_collision(obj1, obj2)
   end
 end
 
-function resolve_rect_round_collision(rect, round)
-  local closest_x = mid(rect.x - rect.width / 2, round.x, rect.x + rect.width / 2)
-  local closest_y = mid(rect.y - rect.height / 2, round.y, rect.y + rect.height / 2)
-
-  local dx = round.x - closest_x
-  local dy = round.y - closest_y
-  local distance = sqrt(dx^2 + dy^2)
-
-  if distance > 0 then
-    local overlap = (round.width / 2) - distance
-    if overlap > 0 then
-      dx /= distance
-      dy /= distance
-
-      round.x += dx * overlap
-      round.y += dy * overlap
-
-      if abs(dx) > abs(dy) then
-        return "horizontal"
-      elseif abs(dy) > abs(dx) then
-        return "vertical"
-      else
-        return "diagonal"
-      end
-    end
-  end
+function resolve_collision(obj1, obj2)
+  return resolve_aabb_collision(obj1, obj2)
 end
-
-function resolve_round_round_collision(round1, round2)
-  local dx = round2.x - round1.x
-  local dy = round2.y - round1.y
-  local distance = sqrt(dx^2 + dy^2)
-
-  if distance > 0 then
-    local overlap = (round1.width / 2 + round2.width / 2) - distance
-    if overlap > 0 then
-      dx /= distance
-      dy /= distance
-
-      round1.x -= dx * overlap / 2
-      round1.y -= dy * overlap / 2
-      round2.x += dx * overlap / 2
-      round2.y += dy * overlap / 2
-
-      if abs(dx) > abs(dy) then
-        return "horizontal"
-      elseif abs(dy) > abs(dx) then
-        return "vertical"
-      else
-        return "diagonal"
-      end
-    end
-  end
-end
-
 
 function _init()
   frog_x = 64
@@ -495,17 +407,13 @@ function _draw()
     rectfill(frog.x + 2, frog.y - 3, frog.x + 2, frog.y - 3, 0)
   end
 
-  if frog_direction <1 then
-    spr(4, frog.x - 6, frog.y - 5)
-    spr(5, frog.x + 2, frog.y - 5)
-  else
-    spr(5, frog.x - 9, frog.y - 5, 1, 1, true)
-    spr(4, frog.x - 1, frog.y - 5, 1, 1, true)
-  end
-
-  spr(1, 48, 87)
-  spr(2, 72, 87)
-  spr(3, 80, 87)
+  -- if frog_direction <1 then
+  --   spr(4, frog.x - 6, frog.y - 5)
+  --   spr(5, frog.x + 2, frog.y - 5)
+  -- else
+  --   spr(5, frog.x - 9, frog.y - 5, 1, 1, true)
+  --   spr(4, frog.x - 1, frog.y - 5, 1, 1, true)
+  -- end
 
   local cursor_x = frog.x + cos(cursor_angle / 360) * cursor_distance
   local cursor_y = frog.y + sin(cursor_angle / 360) * cursor_distance
