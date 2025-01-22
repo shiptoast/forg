@@ -295,7 +295,7 @@ function _init()
   uncaught_objects = {}
   caught_objects = {}
   object_spawn_timer = 0
-  object_spawn_interval = 60
+  object_spawn_interval = 90
 
   renderables = {}
 
@@ -399,11 +399,11 @@ function _update()
 
         if tongue_progress <= 0 then
           obj.caught = false
-          obj:set_static(false)
+          drop_offset = 4 + rnd(4)
           if frog_direction == 1 or (frog_direction == 0 and cursor_angle < 90) then
-            obj.x = frog.x + 6
+            obj.x = frog.x + drop_offset
           else
-            obj.x = frog.x - 6
+            obj.x = frog.x - drop_offset
           end
 
           local stack_height = tank_y_end - obj.height / 2
@@ -425,10 +425,9 @@ function _update()
 
     -- Create a round uncaught object
     local obj = make_random_obj()
-    obj:set_static(true)
     obj:set_tag("grabbable", true)
     obj.caught = false -- Add a caught state to the object
-    obj.timer = 60 -- Timer for disappearance
+    obj.timer = object_spawn_interval -- Timer for disappearance
     add(uncaught_objects, obj)
     add(renderables, obj)
   end
@@ -447,9 +446,12 @@ function _update()
       for other in all(renderables) do
         if obj != other then
           is_touching_object = check_collision(obj, other)
-          if is_touching_object then
+          if is_touching_object and other != frog then
+            obj:del_tag("grabbable")
+            obj.caught = false
+            del(caught_objects, obj)
             dir = resolve_collision(obj, other)
-            if dir == "vertical" and (other == tank_bottom or other:is_grounded()) then
+            if dir == "vertical" and (other == tank_bottom or other:is_grounded()) and other.y > obj.y then
               obj.y -= 1;
               obj:set_grounded(true)
             end
@@ -457,7 +459,7 @@ function _update()
         end
       end
 
-      if not (obj:is_grounded() or obj:is_static()) then
+      if not (obj:is_grounded() or obj:is_static() or obj:get_tag("grabbable") == true) then
         obj.y_vel += gravity
       end
     end
