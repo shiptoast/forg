@@ -178,6 +178,12 @@ function resolve_collision(obj1, obj2)
 end
 
 function _init()
+  -- game balance tunables
+
+  cursor_rotation_speed = 4 -- degrees per tick
+
+  -- other stuff
+
   frog_x = 64
   frog_y = 87
   frog_jump_speed = -4
@@ -185,6 +191,8 @@ function _init()
   frog_horizontal_speed = 0
   frog_on_ground = false
   frog_direction = 1
+
+  btns_pressed = {}
 
   tank_x_start = 38
   tank_x_end = 90
@@ -223,9 +231,24 @@ function _init()
 end
 
 function _update()
+  local left_pressed = false
+  local right_pressed = false
+  for _, btn in ipairs(btns_pressed) do
+    if btn == 1 then left_pressed = true end
+    if btn == -1 then right_pressed = true end
+  end
+
+  if btn(0) and not left_pressed then add(btns_pressed, 1) end
+  if not btn(0) and left_pressed then del(btns_pressed, 1) end
+
+  if btn(1) and not right_pressed then add(btns_pressed, -1) end
+  if not btn(1) and right_pressed then del(btns_pressed, -1) end
+
+  local x_dir = 0
+  if #btns_pressed >= 1 then x_dir = btns_pressed[#btns_pressed] end
+
   if not btn(4) and not btn(5) and frog:is_grounded() then
-    if btn(0) then cursor_angle = (cursor_angle + 4) % 360 end
-    if btn(1) then cursor_angle = (cursor_angle - 4) % 360 end
+    cursor_angle = (cursor_angle + (x_dir * cursor_rotation_speed)) % 360
   end
 
   if not frog:is_grounded() then
@@ -425,5 +448,5 @@ function _draw()
     line(frog.x + frog_direction, frog.y, tongue_x, tongue_y, 8)
   end
 
-  print("hi andrew", 1, 1, 7)
+  print("why are arrays 1-indexed", 1, 1, 7)
 end
