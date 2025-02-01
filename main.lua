@@ -1,79 +1,3 @@
-Entity = {}
-Entity.__index = Entity
-
-function Entity:new(pos_x, pos_y, width, height, color, draw_func, shape_type)
-  local entity = setmetatable({
-    x = pos_x,
-    y = pos_y,
-    width = width,
-    height = height,
-    color = color,
-    debug_color = nil,
-    draw_func = function(self)
-      draw_func(self)
-    end,
-    shape_type = shape_type,
-    x_vel = 0,
-    y_vel = 0,
-    tags = {},
-    child_objects = {}
-  }, Entity)
-  return entity
-end
-
-function Entity:draw()
-  self.draw_func(self)
-end
-
-function Entity:get_tag(tag)
-  return self.tags[tag]
-end
-
-function Entity:set_tag(tag, val)
-  self.tags[tag] = val
-end
-
-function Entity:del_tag(tag)
-  self.tags[tag] = nil
-end
-
-function Entity:set_static(is_static)
-  self:set_tag("static", is_static)
-end
-
-function Entity:is_static()
-  return self:get_tag("static") == true
-end
-
-function Entity:set_grounded(is_grounded)
-  self:set_tag("grounded", is_grounded)
-end
-
-function Entity:is_grounded()
-  return self:get_tag("grounded") == true
-end
-
-function make_rect(pos_x, pos_y, width, height, color)
-  return Entity:new(
-    pos_x,
-    pos_y,
-    width,
-    height,
-    color,
-    function(self)
-      if self.debug_color != nil then draw_color = self.debug_color else draw_color = self.color end
-      rectfill(
-        self.x - self.width / 2,
-        self.y - self.height / 2,
-        self.x + self.width / 2,
-        self.y + self.height / 2,
-        draw_color
-      )
-    end,
-    "rect"
-  )
-end
-
 function make_shades(pos_x, pos_y)
   shades = make_rect(pos_x, pos_y, 8, 3, 3)
   old_draw_func = shades.draw_func
@@ -111,70 +35,23 @@ function make_random_obj()
   local y = 50 + rnd(20)
   local width = flr(rnd(5)) + 2
   local height = flr(rnd(5)) + 2
-  local color = flr(rnd(15)) + 1
-  local is_watch = rnd(1) <= 0.3
-  local is_cam = rnd(1) <= 0.2
-  local is_shades = rnd(1) <= 0.1
-  -- local is_round = rnd(1) > 0.5
+  local color = flr(rnd(14)) + 1
+  if color >= 12 then color += 1 end
+  -- local is_watch = rnd(1) <= 0.3
+  -- local is_cam = rnd(1) <= 0.2
+  -- local is_shades = rnd(1) <= 0.1
+  -- -- local is_round = rnd(1) > 0.5
 
-  if is_shades then
-    grabbable = make_shades(x, y)
-  elseif is_cam then
-    grabbable = make_camera(x, y)
-  elseif is_watch then
-    grabbable = make_watch(x, y)
-  else
+  -- if is_shades then
+  --   grabbable = make_shades(x, y)
+  -- elseif is_cam then
+  --   grabbable = make_camera(x, y)
+  -- elseif is_watch then
+  --   grabbable = make_watch(x, y)
+  -- else
     grabbable = make_rect(x, y, width, height, color)
-  end
+  -- end
   return grabbable
-end
-
-function aabb_collision(obj1, obj2)
-  return obj1.x - obj1.width / 2 < obj2.x + obj2.width / 2 and -- obj1's left is to the left of obj2's right
-         obj1.x + obj1.width / 2 > obj2.x - obj2.width / 2 and -- obj1's right is to the right of obj2's left
-         obj1.y - obj1.height / 2 < obj2.y + obj2.height / 2 and -- obj1's top is above obj2's bottom
-         obj1.y + obj1.height / 2 > obj2.y - obj2.height / 2    -- obj1's bottom is below obj2's top
-end
-
-function check_collision(obj1, obj2)
-  return aabb_collision(obj1, obj2)
-end
-
-function resolve_aabb_collision(obj1, obj2)
-  -- Calculate half widths and heights
-  local half_width1, half_width2 = obj1.width / 2, obj2.width / 2
-  local half_height1, half_height2 = obj1.height / 2, obj2.height / 2
-
-  -- Calculate the overlap
-  local overlap_x = (half_width1 + half_width2) - abs(obj1.x - obj2.x)
-  local overlap_y = (half_height1 + half_height2) - abs(obj1.y - obj2.y)
-
-  -- Only resolve if there is a collision
-  if overlap_x > 0 and overlap_y > 0 then
-    if overlap_x < overlap_y then
-      -- Resolve on x-axis
-      obj1.x_vel = 0
-      if obj1.x < obj2.x then
-        obj1.x -= overlap_x
-      else
-        obj1.x += overlap_x
-      end
-      return "horizontal"
-    else
-      -- Resolve on y-axis
-      obj1.y_vel = 0
-      if obj1.y < obj2.y then
-        obj1.y -= overlap_y
-      else
-        obj1.y += overlap_y
-      end
-      return "vertical"
-    end
-  end
-end
-
-function resolve_collision(obj1, obj2)
-  return resolve_aabb_collision(obj1, obj2)
 end
 
 function _init()
@@ -186,7 +63,7 @@ function _init()
 
   frog_x = 64
   frog_y = 87
-  frog_jump_speed = -4
+  frog_jump_speed = 2
   frog_vertical_speed = 0
   frog_horizontal_speed = 0
   frog_on_ground = false
@@ -194,11 +71,11 @@ function _init()
 
   btns_pressed = {}
 
-  tank_x_start = 38
-  tank_x_end = 90
+  tank_x_start = 18
+  tank_x_end = 110
   tank_y_start = 64
   tank_y_end = 96
-  gravity = 0.08
+  gravity = 0.12
   drag = 0.05
 
   cursor_angle = 0
@@ -228,6 +105,15 @@ function _init()
 
   frog = make_rect(frog_x, frog_y, 4, 4, 11)
   add(renderables, frog)
+
+  forglet = make_forglet(frog_x + 20, frog_y, frog)
+  add(renderables, forglet)
+
+  forglet2 = make_forglet(frog_x + 20, frog_y, forglet)
+  add(renderables, forglet2)
+
+  forglet3 = make_forglet(frog_x + 20, frog_y, forglet2)
+  add(renderables, forglet3)
 end
 
 function _update()
@@ -262,8 +148,8 @@ function _update()
     local hop_direction_x = cursor_x - frog.x
     local hop_direction_y = cursor_y - frog.y
     local hop_magnitude = sqrt(hop_direction_x^2 + hop_direction_y^2)
-    frog.x_vel = (hop_direction_x / hop_magnitude) * 2
-    frog.y_vel = (hop_direction_y / hop_magnitude) * 2
+    frog.x_vel = (hop_direction_x / hop_magnitude) * frog_jump_speed
+    frog.y_vel = (hop_direction_y / hop_magnitude) * frog_jump_speed
     frog:set_grounded(false)
   end
 
@@ -376,7 +262,8 @@ function _update()
   for obj in all(renderables) do
     if not (obj:is_static() or obj:is_grounded() or obj:get_tag("grabbable")) then
       for other in all(renderables) do
-        if obj != other then
+        -- todo, add collision filters instead of this garbage
+        if obj != other and not (obj:has_tag("forglet") and other:has_tag("forglet")) then
           is_touching_object = check_collision(obj, other)
           if is_touching_object and other != frog then
             obj:del_tag("grabbable")
@@ -403,6 +290,10 @@ function _update()
   if frog.y_vel < 0 then
     frog:set_grounded(false)
   end
+
+  forglet:update()
+  forglet2:update()
+  forglet3:update()
 end
 
 function _draw()

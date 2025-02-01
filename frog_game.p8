@@ -1,6 +1,9 @@
 pico-8 cartridge // http://www.pico-8.com
 version 42
 __lua__
+#include entity.lua
+#include physics.lua
+#include forglet.lua
 #include main.lua
 __gfx__
 00000000000000000000000000000000000000000005500000888800000000000000000000000000000000000000000000000000000000000000000000000000
