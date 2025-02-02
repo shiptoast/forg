@@ -57,7 +57,10 @@ end
 function _init()
   -- game balance tunables
 
-  cursor_rotation_speed = 4 -- degrees per tick
+  cursor_rotation_speed = 3 -- degrees per tick
+  forg_move_speed = 0.7 -- pixels per tick
+
+  forg_direction_influence = 25 -- degrees where forg faces fwd per quadrant
 
   -- other stuff
 
@@ -79,7 +82,7 @@ function _init()
   gravity = 0.12
   drag = 0.05
 
-  cursor_angle = 0
+  cursor_angle = 90
   cursor_distance = 32
 
   tongue_active = false
@@ -127,13 +130,6 @@ function _update()
   -- left/right to move forg
   control_forg()
 
-  -- frog movement .... tbd
-
-  -- if not frog:is_grounded() then
-  --   if btn(0) and frog.x_vel == 0 then frog.x_vel = min(-1, frog.x_vel) end
-  --   if btn(1) and frog.x_vel == 0 then frog.x_vel =  max(1, frog.x_vel) end
-  -- end
-
   -- jumping .... tbd
 
   -- if btn(4) and frog:is_grounded() then
@@ -145,14 +141,6 @@ function _update()
   --   frog.x_vel = (hop_direction_x / hop_magnitude) * frog_jump_speed
   --   frog.y_vel = (hop_direction_y / hop_magnitude) * frog_jump_speed
   --   frog:set_grounded(false)
-  -- end
-
-  -- if cursor_angle > 270 or cursor_angle < 65 then
-  --   frog_direction = 1
-  -- elseif cursor_angle >= 65 and cursor_angle < 115 then
-  --   frog_direction = 0
-  -- else
-  --   frog_direction = -1
   -- end
 
   -- if frog:is_grounded() then
@@ -347,6 +335,19 @@ function control_cursor()
   if #cursor_btns_pressed >= 1 then x_dir = cursor_btns_pressed[#cursor_btns_pressed] end
 
   cursor_angle = (cursor_angle + (x_dir * cursor_rotation_speed)) % 360
+
+  -- right-facing
+  local q1_bkpt = 90 - forg_direction_influence
+  local q4_bkpt = 270 + forg_direction_influence
+  local face_right = cursor_angle < q1_bkpt or cursor_angle > q4_bkpt
+  -- left-facing
+  local q2_bkpt = 90 + forg_direction_influence
+  local q3_bkpt = 270 - forg_direction_influence
+  local face_left = cursor_angle > q2_bkpt and cursor_angle < q3_bkpt
+
+  if face_right then frog_direction = 1
+  elseif face_left then frog_direction = -1
+  else frog_direction = 0 end
 end
 
 function control_tongue()
@@ -375,6 +376,8 @@ function control_forg()
   local x_dir = 0
   if #forg_btns_pressed >= 1 then x_dir = forg_btns_pressed[#forg_btns_pressed] end
 
-  frog_direction = x_dir
-  frog.x_vel = 0.7 * x_dir
+  frog.x_vel = forg_move_speed * x_dir
+
+  -- frog input overrides cursor for facing direction
+  if x_dir != 0 then frog_direction = x_dir end
 end
