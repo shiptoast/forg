@@ -69,7 +69,8 @@ function _init()
   frog_on_ground = false
   frog_direction = 1
 
-  btns_pressed = {}
+  cursor_btns_pressed = {}
+  forg_btns_pressed = {}
 
   tank_x_start = 18
   tank_x_end = 110
@@ -117,66 +118,52 @@ function _init()
 end
 
 function _update()
-  local left_pressed = false
-  local right_pressed = false
-  for _, btn in ipairs(btns_pressed) do
-    if btn == 1 then left_pressed = true end
-    if btn == -1 then right_pressed = true end
-  end
+  -- left/right to aim cursor
+  control_cursor()
 
-  if btn(0) and not left_pressed then add(btns_pressed, 1) end
-  if not btn(0) and left_pressed then del(btns_pressed, 1) end
+  -- up to shoot tongue
+  control_tongue()
 
-  if btn(1) and not right_pressed then add(btns_pressed, -1) end
-  if not btn(1) and right_pressed then del(btns_pressed, -1) end
+  -- X/O to move forg
+  control_forg()
 
-  local x_dir = 0
-  if #btns_pressed >= 1 then x_dir = btns_pressed[#btns_pressed] end
+  -- frog movement .... tbd
 
-  if not btn(4) and not btn(5) and frog:is_grounded() then
-    cursor_angle = (cursor_angle + (x_dir * cursor_rotation_speed)) % 360
-  end
+  -- if not frog:is_grounded() then
+  --   if btn(0) and frog.x_vel == 0 then frog.x_vel = min(-1, frog.x_vel) end
+  --   if btn(1) and frog.x_vel == 0 then frog.x_vel =  max(1, frog.x_vel) end
+  -- end
 
-  if not frog:is_grounded() then
-    if btn(0) and frog.x_vel == 0 then frog.x_vel = min(-1, frog.x_vel) end
-    if btn(1) and frog.x_vel == 0 then frog.x_vel =  max(1, frog.x_vel) end
-  end
+  -- jumping .... tbd
 
-  if btn(4) and frog:is_grounded() then
-    local cursor_x = frog.x + cos(cursor_angle / 360) * cursor_distance
-    local cursor_y = frog.y + sin(cursor_angle / 360) * cursor_distance
-    local hop_direction_x = cursor_x - frog.x
-    local hop_direction_y = cursor_y - frog.y
-    local hop_magnitude = sqrt(hop_direction_x^2 + hop_direction_y^2)
-    frog.x_vel = (hop_direction_x / hop_magnitude) * frog_jump_speed
-    frog.y_vel = (hop_direction_y / hop_magnitude) * frog_jump_speed
-    frog:set_grounded(false)
-  end
+  -- if btn(4) and frog:is_grounded() then
+  --   local cursor_x = frog.x + cos(cursor_angle / 360) * cursor_distance
+  --   local cursor_y = frog.y + sin(cursor_angle / 360) * cursor_distance
+  --   local hop_direction_x = cursor_x - frog.x
+  --   local hop_direction_y = cursor_y - frog.y
+  --   local hop_magnitude = sqrt(hop_direction_x^2 + hop_direction_y^2)
+  --   frog.x_vel = (hop_direction_x / hop_magnitude) * frog_jump_speed
+  --   frog.y_vel = (hop_direction_y / hop_magnitude) * frog_jump_speed
+  --   frog:set_grounded(false)
+  -- end
 
-  if cursor_angle > 270 or cursor_angle < 65 then
-    frog_direction = 1
-  elseif cursor_angle >= 65 and cursor_angle < 115 then
-    frog_direction = 0
-  else
-    frog_direction = -1
-  end
+  -- if cursor_angle > 270 or cursor_angle < 65 then
+  --   frog_direction = 1
+  -- elseif cursor_angle >= 65 and cursor_angle < 115 then
+  --   frog_direction = 0
+  -- else
+  --   frog_direction = -1
+  -- end
 
-  if frog:is_grounded() then
-    frog.x_vel = 0
-  else
-    if frog.x_vel > 0 then
-      frog.x_vel = max(0, frog.x_vel - drag)
-    elseif frog.x_vel < 0 then
-      frog.x_vel = min(0, frog.x_vel + drag)
-    end
-  end
-
-  if btn(5) and not tongue_active and frog:is_grounded() then
-    sfx(0, 0, 0, 5)
-    tongue_active = true
-    tongue_retracting = false
-    tongue_progress = 0
-  end
+  -- if frog:is_grounded() then
+  --   frog.x_vel = 0
+  -- else
+  --   if frog.x_vel > 0 then
+  --     frog.x_vel = max(0, frog.x_vel - drag)
+  --   elseif frog.x_vel < 0 then
+  --     frog.x_vel = min(0, frog.x_vel + drag)
+  --   end
+  -- end
 
   if tongue_active then
     if tongue_retracting then
@@ -339,5 +326,55 @@ function _draw()
     line(frog.x + frog_direction, frog.y, tongue_x, tongue_y, 8)
   end
 
-  print("why are arrays 1-indexed", 1, 1, 7)
+  print("forg ♥ forglets", 1, 1, 7)
+end
+
+function control_cursor()
+  local left_pressed = false
+  local right_pressed = false
+  for _, btn in ipairs(cursor_btns_pressed) do
+    if btn == 1 then left_pressed = true end
+    if btn == -1 then right_pressed = true end
+  end
+
+  if btn(0) and not left_pressed then add(cursor_btns_pressed, 1) end
+  if not btn(0) and left_pressed then del(cursor_btns_pressed, 1) end
+
+  if btn(1) and not right_pressed then add(cursor_btns_pressed, -1) end
+  if not btn(1) and right_pressed then del(cursor_btns_pressed, -1) end
+
+  local x_dir = 0
+  if #cursor_btns_pressed >= 1 then x_dir = cursor_btns_pressed[#cursor_btns_pressed] end
+
+  cursor_angle = (cursor_angle + (x_dir * cursor_rotation_speed)) % 360
+end
+
+function control_tongue()
+  if btn(2) and not tongue_active then
+    sfx(0, 0, 0, 5)
+    tongue_active = true
+    tongue_retracting = false
+    tongue_progress = 0
+  end
+end
+
+function control_forg()
+  local left_pressed = false
+  local right_pressed = false
+  for _, btn in ipairs(forg_btns_pressed) do
+    if btn == 1 then left_pressed = true end
+    if btn == -1 then right_pressed = true end
+  end
+
+  if btn(5) and not left_pressed then add(forg_btns_pressed, 1) end
+  if not btn(5) and left_pressed then del(forg_btns_pressed, 1) end
+
+  if btn(4) and not right_pressed then add(forg_btns_pressed, -1) end
+  if not btn(4) and right_pressed then del(forg_btns_pressed, -1) end
+
+  local x_dir = 0
+  if #forg_btns_pressed >= 1 then x_dir = forg_btns_pressed[#forg_btns_pressed] end
+
+  frog_direction = x_dir
+  frog.x_vel = 0.7 * x_dir
 end

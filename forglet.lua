@@ -5,12 +5,12 @@ function make_forglet(pos_x, pos_y, target)
     forglet.facing = 1
     forglet:set_tag("forglet", true)
 
-    -- Update: when "up" (btn2) is pressed and on ground, hop toward target
+    -- Update: when "down" (btn3) is pressed and on ground, hop toward target
     forglet.update_func = function(self)
       dist = abs(self.target.x - self.x)
       self.facing = (self.target.x >= self.x) and 1 or -1
 
-      if btn(2) and self:is_grounded() and dist > 10 then
+      if btn(3) and self:is_grounded() and dist > 10 then
         local dx = self.target.x - self.x
         local dy = self.target.y - self.y
         local d = sqrt(dx*dx + dy*dy)
