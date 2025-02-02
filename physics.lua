@@ -45,3 +45,16 @@ function aabb_collision(obj1, obj2)
   function resolve_collision(obj1, obj2)
     return resolve_aabb_collision(obj1, obj2)
   end
+
+function check_all_collisions(entities)
+  for i=1, #entities - 1 do
+    for j=i+1, #entities do
+      local a, b = entities[i], entities[j]
+      if a:shouldCollideWith(b) and b:shouldCollideWith(a) and check_collision(a, b) then
+        resolve_collision(a, b)
+        a:onCollision(b)
+        b:onCollision(a)
+      end
+    end
+  end
+end

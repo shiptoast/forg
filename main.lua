@@ -58,9 +58,9 @@ function _init()
   -- game balance tunables
 
   cursor_rotation_speed = 3 -- degrees per tick
-  forg_move_speed = 0.7 -- pixels per tick
+  frog_move_speed = 0.7 -- pixels per tick
 
-  forg_direction_influence = 25 -- degrees where forg faces fwd per quadrant
+  frog_direction_influence = 25 -- degrees where frog faces fwd per quadrant
 
   -- other stuff
 
@@ -73,7 +73,7 @@ function _init()
   frog_direction = 1
 
   cursor_btns_pressed = {}
-  forg_btns_pressed = {}
+  frog_btns_pressed = {}
 
   tank_x_start = 18
   tank_x_end = 110
@@ -110,14 +110,14 @@ function _init()
   frog = make_rect(frog_x, frog_y, 4, 4, 11)
   add(renderables, frog)
 
-  forglet = make_forglet(frog_x + 20, frog_y, frog)
-  add(renderables, forglet)
+  froglet = make_froglet(frog_x + 20, frog_y, frog)
+  add(renderables, froglet)
 
-  forglet2 = make_forglet(frog_x + 20, frog_y, forglet)
-  add(renderables, forglet2)
+  froglet2 = make_froglet(frog_x + 20, frog_y, froglet)
+  add(renderables, froglet2)
 
-  forglet3 = make_forglet(frog_x + 20, frog_y, forglet2)
-  add(renderables, forglet3)
+  froglet3 = make_froglet(frog_x + 20, frog_y, froglet2)
+  add(renderables, froglet3)
 end
 
 function _update()
@@ -127,8 +127,8 @@ function _update()
   -- up to shoot tongue
   control_tongue()
 
-  -- left/right to move forg
-  control_forg()
+  -- left/right to move frog
+  control_frog()
 
   if tongue_active then
     if tongue_retracting then
@@ -215,7 +215,7 @@ function _update()
     if not (obj:is_static() or obj:is_grounded() or obj:get_tag("grabbable")) then
       for other in all(renderables) do
         -- todo, add collision filters instead of this garbage
-        if obj != other and not (obj:has_tag("forglet") and other:has_tag("forglet")) then
+        if obj != other and not (obj:has_tag("froglet") and other:has_tag("froglet")) then
           is_touching_object = check_collision(obj, other)
           if is_touching_object and other != frog then
             obj:del_tag("grabbable")
@@ -243,9 +243,9 @@ function _update()
     frog:set_grounded(false)
   end
 
-  forglet:update()
-  forglet2:update()
-  forglet3:update()
+  froglet:update()
+  froglet2:update()
+  froglet3:update()
 end
 
 function _draw()
@@ -291,7 +291,7 @@ function _draw()
     line(frog.x + frog_direction, frog.y, tongue_x, tongue_y, 8)
   end
 
-  print("forg ♥ forglets", 1, 1, 7)
+  print("frog ♥ froglets", 1, 1, 7)
 end
 
 function control_cursor()
@@ -314,12 +314,12 @@ function control_cursor()
   cursor_angle = (cursor_angle + (x_dir * cursor_rotation_speed)) % 360
 
   -- right-facing
-  local q1_bkpt = 90 - forg_direction_influence
-  local q4_bkpt = 270 + forg_direction_influence
+  local q1_bkpt = 90 - frog_direction_influence
+  local q4_bkpt = 270 + frog_direction_influence
   local face_right = cursor_angle < q1_bkpt or cursor_angle > q4_bkpt
   -- left-facing
-  local q2_bkpt = 90 + forg_direction_influence
-  local q3_bkpt = 270 - forg_direction_influence
+  local q2_bkpt = 90 + frog_direction_influence
+  local q3_bkpt = 270 - frog_direction_influence
   local face_left = cursor_angle > q2_bkpt and cursor_angle < q3_bkpt
 
   if face_right then frog_direction = 1
@@ -336,24 +336,24 @@ function control_tongue()
   end
 end
 
-function control_forg()
+function control_frog()
   local left_pressed = false
   local right_pressed = false
-  for _, btn in ipairs(forg_btns_pressed) do
+  for _, btn in ipairs(frog_btns_pressed) do
     if btn == 1 then left_pressed = true end
     if btn == -1 then right_pressed = true end
   end
 
-  if btn(1) and not left_pressed then add(forg_btns_pressed, 1) end
-  if not btn(1) and left_pressed then del(forg_btns_pressed, 1) end
+  if btn(1) and not left_pressed then add(frog_btns_pressed, 1) end
+  if not btn(1) and left_pressed then del(frog_btns_pressed, 1) end
 
-  if btn(0) and not right_pressed then add(forg_btns_pressed, -1) end
-  if not btn(0) and right_pressed then del(forg_btns_pressed, -1) end
+  if btn(0) and not right_pressed then add(frog_btns_pressed, -1) end
+  if not btn(0) and right_pressed then del(frog_btns_pressed, -1) end
 
   local x_dir = 0
-  if #forg_btns_pressed >= 1 then x_dir = forg_btns_pressed[#forg_btns_pressed] end
+  if #frog_btns_pressed >= 1 then x_dir = frog_btns_pressed[#frog_btns_pressed] end
 
-  frog.x_vel = forg_move_speed * x_dir
+  frog.x_vel = frog_move_speed * x_dir
 
   -- frog input overrides cursor for facing direction
   if x_dir != 0 then frog_direction = x_dir end

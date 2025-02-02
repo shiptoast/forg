@@ -1,12 +1,12 @@
-function make_forglet(pos_x, pos_y, target)
-    local forglet = make_rect(pos_x, pos_y, 3, 3, 11)  -- green square
-    forglet.target = target
-    forglet.hop_speed = 0.5 -- tiny hop speed
-    forglet.facing = 1
-    forglet:set_tag("forglet", true)
+function make_froglet(pos_x, pos_y, target)
+    local froglet = make_rect(pos_x, pos_y, 3, 3, 11)  -- green square
+    froglet.target = target
+    froglet.hop_speed = 0.5 -- tiny hop speed
+    froglet.facing = 1
+    froglet:set_tag("froglet", true)
 
     -- Update: when "down" (btn3) is pressed and on ground, hop toward target
-    forglet.update_func = function(self)
+    froglet.update_func = function(self)
       dist = abs(self.target.x - self.x)
       self.facing = (self.target.x >= self.x) and 1 or -1
 
@@ -29,8 +29,8 @@ function make_forglet(pos_x, pos_y, target)
     end
 
     -- Wrap the base draw to add a 1x1 black eye in the facing direction
-    local base_draw = forglet.draw_func
-    forglet.draw_func = function(self)
+    local base_draw = froglet.draw_func
+    froglet.draw_func = function(self)
       base_draw(self)  -- draw the 3x3 square
       if self.facing == 1 then
         pset(self.x + 2, self.y - 1, 0)
@@ -41,5 +41,5 @@ function make_forglet(pos_x, pos_y, target)
       end
     end
 
-    return forglet
+    return froglet
   end
