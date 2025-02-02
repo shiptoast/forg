@@ -130,29 +130,6 @@ function _update()
   -- left/right to move forg
   control_forg()
 
-  -- jumping .... tbd
-
-  -- if btn(4) and frog:is_grounded() then
-  --   local cursor_x = frog.x + cos(cursor_angle / 360) * cursor_distance
-  --   local cursor_y = frog.y + sin(cursor_angle / 360) * cursor_distance
-  --   local hop_direction_x = cursor_x - frog.x
-  --   local hop_direction_y = cursor_y - frog.y
-  --   local hop_magnitude = sqrt(hop_direction_x^2 + hop_direction_y^2)
-  --   frog.x_vel = (hop_direction_x / hop_magnitude) * frog_jump_speed
-  --   frog.y_vel = (hop_direction_y / hop_magnitude) * frog_jump_speed
-  --   frog:set_grounded(false)
-  -- end
-
-  -- if frog:is_grounded() then
-  --   frog.x_vel = 0
-  -- else
-  --   if frog.x_vel > 0 then
-  --     frog.x_vel = max(0, frog.x_vel - drag)
-  --   elseif frog.x_vel < 0 then
-  --     frog.x_vel = min(0, frog.x_vel + drag)
-  --   end
-  -- end
-
   if tongue_active then
     if tongue_retracting then
       tongue_progress -= 18
