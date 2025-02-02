@@ -118,13 +118,13 @@ function _init()
 end
 
 function _update()
-  -- left/right to aim cursor
+  -- X/O to aim cursor
   control_cursor()
 
   -- up to shoot tongue
   control_tongue()
 
-  -- X/O to move forg
+  -- left/right to move forg
   control_forg()
 
   -- frog movement .... tbd
@@ -337,11 +337,11 @@ function control_cursor()
     if btn == -1 then right_pressed = true end
   end
 
-  if btn(0) and not left_pressed then add(cursor_btns_pressed, 1) end
-  if not btn(0) and left_pressed then del(cursor_btns_pressed, 1) end
+  if btn(4) and not left_pressed then add(cursor_btns_pressed, 1) end
+  if not btn(4) and left_pressed then del(cursor_btns_pressed, 1) end
 
-  if btn(1) and not right_pressed then add(cursor_btns_pressed, -1) end
-  if not btn(1) and right_pressed then del(cursor_btns_pressed, -1) end
+  if btn(5) and not right_pressed then add(cursor_btns_pressed, -1) end
+  if not btn(5) and right_pressed then del(cursor_btns_pressed, -1) end
 
   local x_dir = 0
   if #cursor_btns_pressed >= 1 then x_dir = cursor_btns_pressed[#cursor_btns_pressed] end
@@ -366,11 +366,11 @@ function control_forg()
     if btn == -1 then right_pressed = true end
   end
 
-  if btn(5) and not left_pressed then add(forg_btns_pressed, 1) end
-  if not btn(5) and left_pressed then del(forg_btns_pressed, 1) end
+  if btn(1) and not left_pressed then add(forg_btns_pressed, 1) end
+  if not btn(1) and left_pressed then del(forg_btns_pressed, 1) end
 
-  if btn(4) and not right_pressed then add(forg_btns_pressed, -1) end
-  if not btn(4) and right_pressed then del(forg_btns_pressed, -1) end
+  if btn(0) and not right_pressed then add(forg_btns_pressed, -1) end
+  if not btn(0) and right_pressed then del(forg_btns_pressed, -1) end
 
   local x_dir = 0
   if #forg_btns_pressed >= 1 then x_dir = forg_btns_pressed[#forg_btns_pressed] end
