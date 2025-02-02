@@ -66,10 +66,7 @@ function _init()
 
   frog_x = 64
   frog_y = 87
-  frog_jump_speed = 2
-  frog_vertical_speed = 0
-  frog_horizontal_speed = 0
-  frog_on_ground = false
+  frog_jump_speed = 1.5
   frog_direction = 1
 
   cursor_btns_pressed = {}
@@ -351,10 +348,14 @@ function control_frog()
   if not btn(0) and right_pressed then del(frog_btns_pressed, -1) end
 
   local x_dir = 0
-  if #frog_btns_pressed >= 1 then x_dir = frog_btns_pressed[#frog_btns_pressed] end
-
-  frog.x_vel = frog_move_speed * x_dir
-
   -- frog input overrides cursor for facing direction
   if x_dir != 0 then frog_direction = x_dir end
+
+  if #frog_btns_pressed >= 1 and frog:is_grounded() then
+    frog:set_grounded(false)
+    frog.x_vel = frog_direction * frog_jump_speed/3
+    frog.y_vel = -frog_jump_speed
+  elseif abs(frog.x_vel) < 0.01 then
+    frog.x_vel = 0
+  end
 end

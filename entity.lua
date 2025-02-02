@@ -1,7 +1,7 @@
 Entity = {}
 Entity.__index = Entity
 
-function Entity:new(pos_x, pos_y, width, height, color, draw_func, shape_type)
+function Entity:new(pos_x, pos_y, width, height, color, draw_func)
   local entity = setmetatable({
     x = pos_x,
     y = pos_y,
@@ -12,11 +12,12 @@ function Entity:new(pos_x, pos_y, width, height, color, draw_func, shape_type)
     draw_func = function(self)
       draw_func(self)
     end,
-    shape_type = shape_type,
     x_vel = 0,
     y_vel = 0,
     tags = {},
-    child_objects = {}
+    child_objects = {},
+    collision_group = nil,
+    collision_mask = {}
   }, Entity)
   return entity
 end
