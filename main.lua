@@ -136,8 +136,14 @@ function _update()
     if tongue_retracting then
       tongue_progress -= 18
       if tongue_progress <= 0 then
-        tongue_active = false
-        tongue_retracting = false
+        if holding_object and tongue_button_down then
+          tongue_progress = 0
+          tongue_active = true
+          tongue_retracting = false
+        else
+          tongue_active = false
+          tongue_retracting = false
+        end
       end
     elseif not holding_object then
       tongue_progress += 18
@@ -152,7 +158,7 @@ function _update()
             obj:del_tag("grabbable")
             add(caught_objects, obj)
             del(uncaught_objects, obj)
-            tongue_retracting = not tongue_button_down
+            tongue_retracting = true
             sfx(0, 0, 7, 7)
           end
         end
@@ -170,10 +176,12 @@ function _update()
         obj.y = frog.y + sin(cursor_angle / 360) * (progress * cursor_distance / tongue_max_progress)
 
         if not tongue_button_down then
-          drop_caught_object(obj)
           tongue_retracting = true
+          if tongue_progress <= 0 then
+            drop_caught_object(obj)
+          end
         elseif tongue_progress <= 0 then
-          drop_caught_object(obj)
+          tongue_retracting = false
         end
       end
     end
