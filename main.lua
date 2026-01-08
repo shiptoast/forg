@@ -128,13 +128,24 @@ function _update()
   control_frog()
 
   if tongue_active then
+    local holding_object = false
+    for obj in all(caught_objects) do
+      if obj.caught then holding_object = true end
+    end
+
     if tongue_retracting then
       tongue_progress -= 18
       if tongue_progress <= 0 then
-        tongue_active = false
-        tongue_retracting = false
+        if holding_object and tongue_button_down then
+          tongue_progress = 0
+          tongue_active = true
+          tongue_retracting = false
+        else
+          tongue_active = false
+          tongue_retracting = false
+        end
       end
-    else
+    elseif not holding_object then
       tongue_progress += 18
 
       local tongue_x = frog.x + cos(cursor_angle / 360) * (tongue_progress * cursor_distance / tongue_max_progress)
@@ -164,22 +175,13 @@ function _update()
         obj.x = frog.x + frog_direction + cos(cursor_angle / 360) * (progress * cursor_distance / tongue_max_progress)
         obj.y = frog.y + sin(cursor_angle / 360) * (progress * cursor_distance / tongue_max_progress)
 
-        if tongue_progress <= 0 then
-          obj.caught = false
-          drop_offset = 6 + rnd(2)
-          if frog_direction == 1 or (frog_direction == 0 and cursor_angle < 90) then
-            obj.x = frog.x + drop_offset
-          else
-            obj.x = frog.x - drop_offset
+        if not tongue_button_down then
+          tongue_retracting = true
+          if tongue_progress <= 0 then
+            drop_caught_object(obj)
           end
-
-          local stack_height = tank_y_end - obj.height / 2
-          for o in all(caught_objects) do
-            if abs(o.x - obj.x) < (obj.width + o.width) / 2 then
-              stack_height = min(stack_height, o.y - o.height / 2 - obj.height / 2)
-            end
-          end
-          obj.y = stack_height
+        elseif tongue_progress <= 0 then
+          tongue_retracting = false
         end
       end
     end
@@ -209,7 +211,7 @@ function _update()
   end
 
   for obj in all(renderables) do
-    if not (obj:is_static() or obj:is_grounded() or obj:get_tag("grabbable")) then
+    if not (obj:is_static() or obj:is_grounded() or obj:get_tag("grabbable") or obj.caught) then
       for other in all(renderables) do
         -- todo, add collision filters instead of this garbage
         if obj != other and not (obj:has_tag("froglet") and other:has_tag("froglet")) then
@@ -325,12 +327,31 @@ function control_cursor()
 end
 
 function control_tongue()
-  if btn(2) and not tongue_active then
+  tongue_button_down = btn(2)
+  if tongue_button_down and not tongue_active then
     sfx(0, 0, 0, 5)
     tongue_active = true
     tongue_retracting = false
     tongue_progress = 0
   end
+end
+
+function drop_caught_object(obj)
+  obj.caught = false
+  drop_offset = 6 + rnd(2)
+  if frog_direction == 1 or (frog_direction == 0 and cursor_angle < 90) then
+    obj.x = frog.x + drop_offset
+  else
+    obj.x = frog.x - drop_offset
+  end
+
+  local stack_height = tank_y_end - obj.height / 2
+  for o in all(caught_objects) do
+    if o != obj and abs(o.x - obj.x) < (obj.width + o.width) / 2 then
+      stack_height = min(stack_height, o.y - o.height / 2 - obj.height / 2)
+    end
+  end
+  obj.y = stack_height
 end
 
 function control_frog()
