@@ -176,10 +176,8 @@ function _update()
         obj.y = frog.y + sin(cursor_angle / 360) * (progress * cursor_distance / tongue_max_progress)
 
         if not tongue_button_down then
+          drop_caught_object(obj)
           tongue_retracting = true
-          if tongue_progress <= 0 then
-            drop_caught_object(obj)
-          end
         elseif tongue_progress <= 0 then
           tongue_retracting = false
         end
