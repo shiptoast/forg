@@ -1,0 +1,15 @@
+{
+  "name": "forg devcontainer",
+  "image": "mcr.microsoft.com/devcontainers/base:bookworm",
+  "postCreateCommand": ".devcontainer/setup_pico8.sh",
+  "containerEnv": {
+    "PICO8_BIN": "/opt/pico8/pico8"
+  },
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "files.eol": "\n"
+      }
+    }
+  }
+}
