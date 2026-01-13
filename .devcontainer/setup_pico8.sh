@@ -6,36 +6,23 @@ if command -v pico8 >/dev/null 2>&1; then
   exit 0
 fi
 
-if [[ -z "${PICO8_URL:-}" ]]; then
-  cat <<'MESSAGE'
-PICO8_URL is not set. To install pico8 in this Codespace:
-1. Upload/download the pico8 Linux archive to a private URL.
-2. Add PICO8_URL as a Codespaces secret or env var.
-3. Rebuild the container.
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+pico8_source="$repo_root/pico8"
+
+if [[ ! -d "$pico8_source" || ! -f "$pico8_source/pico8.dat" ]]; then
+  cat <<MESSAGE
+Pico-8 files not found at $pico8_source.
+Place the official Pico-8 Linux distribution in $pico8_source
+so that pico8 and pico8.dat are present, then rebuild the container.
 MESSAGE
   exit 0
 fi
 
-tmp_dir="$(mktemp -d)"
-trap 'rm -rf "$tmp_dir"' EXIT
-
-archive_path="$tmp_dir/pico8.zip"
-
-curl -fsSL "$PICO8_URL" -o "$archive_path"
-unzip -q "$archive_path" -d "$tmp_dir"
-
-pico8_dat="$(find "$tmp_dir" -type f -name 'pico8.dat' | head -n 1)"
-if [[ -z "$pico8_dat" ]]; then
-  echo "Unable to locate pico8.dat in downloaded archive."
-  exit 1
-fi
-
-pico8_dir="$(dirname "$pico8_dat")"
 install_dir="/opt/pico8"
 
 rm -rf "$install_dir"
 mkdir -p "$install_dir"
-cp -R "$pico8_dir"/* "$install_dir"/
+cp -R "$pico8_source"/* "$install_dir"/
 
 chmod +x "$install_dir/pico8"
 ln -sf "$install_dir/pico8" /usr/local/bin/pico8
