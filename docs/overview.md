@@ -59,7 +59,8 @@ Each `_update()` frame:
 
 1. Reads cursor, tongue, and frog controls.
 2. Extends or retracts the tongue if active.
-3. Checks the tongue tip as a 2x2 AABB against `uncaught_objects`.
+3. Scans the extending tongue tip as a 2x2 AABB against grounded blockers and
+   `uncaught_objects`.
 4. Moves caught objects along the tongue while the button is held.
 5. Drops caught objects near the frog when the tongue button is released.
 6. Spawns new falling objects on a timer.
@@ -107,9 +108,12 @@ When a tongue tip hits a grabbable object:
 - `obj.caught` is set to `true`.
 - The tongue starts retracting.
 
+If the extending tongue hits an existing grounded object before a grabbable
+object, the tongue retracts without catching anything behind that blocker.
+
 If the tongue reaches the frog while the button is still held, the caught
-object stays attached at the frog until the button is released. Dropping uses
-nearby caught objects to pick a stack height.
+object stays attached at the frog until the button is released. Dropping
+releases the object near frog-face height so gravity and collision settle it.
 
 ## Running And Exporting
 

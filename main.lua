@@ -134,23 +134,31 @@ function _update()
         tongue_retracting = false
       end
     elseif not holding_object then
+      local previous_progress = tongue_progress
       tongue_progress += 18
 
-      local tongue_x = frog.x + cos(cursor_angle / 360) * (tongue_progress * cursor_distance / tongue_max_progress)
-      local tongue_y = frog.y + sin(cursor_angle / 360) * (tongue_progress * cursor_distance / tongue_max_progress)
+      local scan_progress = previous_progress
+      while scan_progress < tongue_progress and not tongue_retracting do
+        scan_progress = min(tongue_progress, scan_progress + 2)
+        local tongue_tip = make_tongue_tip(scan_progress)
 
-      for obj in all(uncaught_objects) do
-        if not tongue_retracting then
-          if aabb_collision({ x = tongue_x, y = tongue_y, width = 2, height = 2 }, obj) then
-            obj.caught = true
-            obj.x_vel = 0
-            obj.y_vel = 0
-            obj:set_grounded(false)
-            obj:del_tag("grabbable")
-            add(caught_objects, obj)
-            del(uncaught_objects, obj)
-            tongue_retracting = true
-            sfx(0, 0, 7, 7)
+        if tongue_hits_grounded_object(tongue_tip) then
+          tongue_progress = scan_progress
+          tongue_retracting = true
+        else
+          for obj in all(uncaught_objects) do
+            if not tongue_retracting and aabb_collision(tongue_tip, obj) then
+              tongue_progress = scan_progress
+              obj.caught = true
+              obj.x_vel = 0
+              obj.y_vel = 0
+              obj:set_grounded(false)
+              obj:del_tag("grabbable")
+              add(caught_objects, obj)
+              del(uncaught_objects, obj)
+              tongue_retracting = true
+              sfx(0, 0, 7, 7)
+            end
           end
         end
       end
@@ -307,6 +315,24 @@ end
 
 function call_frogs_btn()
   return btn(3)
+end
+
+function make_tongue_tip(progress)
+  return {
+    x = frog.x + cos(cursor_angle / 360) * (progress * cursor_distance / tongue_max_progress),
+    y = frog.y + sin(cursor_angle / 360) * (progress * cursor_distance / tongue_max_progress),
+    width = 2,
+    height = 2
+  }
+end
+
+function tongue_hits_grounded_object(tongue_tip)
+  for obj in all(renderables) do
+    if obj != frog and obj:is_grounded() and not obj.caught and not obj:get_tag("grabbable") and not obj:has_tag("froglet") then
+      if aabb_collision(tongue_tip, obj) then return true end
+    end
+  end
+  return false
 end
 
 function control_cursor()
