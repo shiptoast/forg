@@ -77,8 +77,10 @@ active, and prints the title text.
 The code uses named helpers for PICO-8 button ids. Gameplay code should call
 these helpers instead of raw `btn(n)`:
 
-- `left_btn()` / `btn(0)`: rotate the reticle one direction.
-- `right_btn()` / `btn(1)`: rotate the reticle the other direction.
+- `left_btn()` / `btn(0)`: rotate the reticle one direction while grounded;
+  steer left while airborne.
+- `right_btn()` / `btn(1)`: rotate the reticle the other direction while
+  grounded; steer right while airborne.
 - `call_frogs_btn()` / `btn(3)`: call froglets.
 - `jump_btn()` / `btn(4)`: jump.
 - `touch_btn()` / `btn(5)`: tongue catch, hold, and release.

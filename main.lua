@@ -311,6 +311,11 @@ end
 
 function control_cursor()
   -- cursor_btns_pressed stores signed reticle input; the last held button wins.
+  if not frog:is_grounded() then
+    cursor_btns_pressed = {}
+    return
+  end
+
   local left_pressed = false
   local right_pressed = false
   for _, btn in ipairs(cursor_btns_pressed) do
