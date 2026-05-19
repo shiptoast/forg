@@ -3,7 +3,7 @@
 ## 2026-05-19
 
 - Changed tongue behavior so caught objects stay held after the tongue retracts
-  to the frog, and only release when the touch/tongue button is released.
+  to the frog. A later touch/tongue button tap now drops the held object.
 - Released objects now drop from frog-face height with gravity instead of
   snapping directly into the stack.
 - Added named input helpers in `main.lua` so gameplay code uses `left_btn()`,

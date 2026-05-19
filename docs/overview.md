@@ -61,8 +61,8 @@ Each `_update()` frame:
 2. Extends or retracts the tongue if active.
 3. Scans the extending tongue tip as a 2x2 AABB against grounded blockers and
    `uncaught_objects`.
-4. Moves caught objects along the tongue while the button is held.
-5. Drops caught objects near the frog when the tongue button is released.
+4. Moves caught objects along the tongue until they reach the frog.
+5. Drops a held object near the frog on the next tongue button tap.
 6. Spawns new falling objects on a timer.
 7. Expires uncaught objects whose timer reaches zero.
 8. Runs the simple O(n^2) collision pass across `renderables`.
@@ -84,7 +84,8 @@ these helpers instead of raw `btn(n)`:
   grounded; steer right while airborne.
 - `call_frogs_btn()` / `btn(3)`: call froglets.
 - `jump_btn()` / `btn(4)`: jump.
-- `touch_btn()` / `btn(5)`: tongue catch, hold, and release.
+- `touch_btn()` / `btn(5)`: shoot the tongue, or drop the currently held
+  object.
 
 `btn(2)` is currently unused.
 
@@ -111,9 +112,10 @@ When a tongue tip hits a grabbable object:
 If the extending tongue hits an existing grounded object before a grabbable
 object, the tongue retracts without catching anything behind that blocker.
 
-If the tongue reaches the frog while the button is still held, the caught
-object stays attached at the frog until the button is released. Dropping
-releases the object near frog-face height so gravity and collision settle it.
+If the tongue reaches the frog with an object, the caught object stays attached
+at the frog. The next `touch_btn()` tap drops it near frog-face height so
+gravity and collision settle it. If nothing is held, a `touch_btn()` tap shoots
+the tongue.
 
 ## Running And Exporting
 

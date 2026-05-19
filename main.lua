@@ -86,6 +86,7 @@ function _init()
   tongue_retracting = false
   tongue_progress = 0
   tongue_max_progress = 120
+  touch_btn_down = false
 
   uncaught_objects = {}
   caught_objects = {}
@@ -176,14 +177,6 @@ function _update()
       obj.x = frog.x + frog_direction + cos(cursor_angle / 360) * (progress * cursor_distance / tongue_max_progress)
       obj.y = frog.y + sin(cursor_angle / 360) * (progress * cursor_distance / tongue_max_progress)
 
-      if not tongue_button_down then
-        if tongue_progress > 0 then
-          tongue_active = true
-          tongue_retracting = true
-        else
-          drop_caught_object(obj)
-        end
-      end
     end
   end
 
@@ -375,12 +368,24 @@ function control_cursor()
 end
 
 function control_tongue()
-  tongue_button_down = touch_btn()
-  if tongue_button_down and not tongue_active and not has_caught_object() then
-    sfx(0, 0, 0, 5)
-    tongue_active = true
-    tongue_retracting = false
-    tongue_progress = 0
+  local touch_down = touch_btn()
+  local touch_pressed = touch_down and not touch_btn_down
+  touch_btn_down = touch_down
+
+  if touch_pressed then
+    if has_caught_object() then
+      for obj in all(caught_objects) do
+        if obj.caught then drop_caught_object(obj) end
+      end
+      tongue_active = false
+      tongue_retracting = false
+      tongue_progress = 0
+    elseif not tongue_active then
+      sfx(0, 0, 0, 5)
+      tongue_active = true
+      tongue_retracting = false
+      tongue_progress = 0
+    end
   end
 end
 
