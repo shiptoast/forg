@@ -55,6 +55,12 @@ operators such as `+=`, `-=`, and `!=`.
 ## Editing Guidance
 
 - For gameplay changes, edit the included `.lua` files.
+- Use the named input helpers instead of calling PICO-8 `btn(n)` directly.
+  The source of truth is in `main.lua`:
+  `left_btn()` = left arrow / `btn(0)`, `right_btn()` = right arrow /
+  `btn(1)`, `call_frogs_btn()` = down / `btn(3)`, `jump_btn()` = O /
+  `btn(4)`, and `touch_btn()` = X / `btn(5)` for tongue catch/hold/release.
+  `btn(2)` is currently unused.
 - For sprites, SFX, cartridge metadata, or include order, edit `frog_game.p8`
   through PICO-8 when possible.
 - After gameplay or asset changes, regenerate `forg.html` and `forg.js` with
@@ -72,8 +78,8 @@ operators such as `+=`, `-=`, and `!=`.
 - `forg.html` and `forg.js` are generated export files.
 - `check_all_collisions()` in `physics.lua` is unused and references methods
   absent from `Entity`.
-- `control_frog()` currently does not assign its local `x_dir` from the frog
-  input stack, so jump direction follows `frog_direction`.
+- Jump direction follows the current `frog_direction`, which is derived from
+  reticle angle.
 - Several assignments are global by default. Use `local` for new scratch
   variables unless PICO-8 global state is intentional.
 - Collision is intentionally simple and O(n^2). Existing filters are hard

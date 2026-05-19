@@ -58,7 +58,7 @@ function _init()
   -- game balance tunables
 
   cursor_rotation_speed = 3 -- degrees per tick
-  frog_move_speed = 0.7 -- pixels per tick
+  frog_move_speed = 0.04 -- airborne x velocity added per tick
 
   frog_direction_influence = 25 -- degrees where frog faces fwd per quadrant
 
@@ -118,29 +118,20 @@ function _init()
 end
 
 function _update()
-  -- Read player input first. The helpers below document each numeric btn()
-  -- call at the point where it is used.
+  -- Read player input first. Control helpers use the named button aliases.
   control_cursor()
   control_tongue()
   control_frog()
 
   if tongue_active then
-    local holding_object = false
-    for obj in all(caught_objects) do
-      if obj.caught then holding_object = true end
-    end
+    local holding_object = has_caught_object()
 
     if tongue_retracting then
       tongue_progress -= 18
       if tongue_progress <= 0 then
-        if holding_object and tongue_button_down then
-          tongue_progress = 0
-          tongue_active = true
-          tongue_retracting = false
-        else
-          tongue_active = false
-          tongue_retracting = false
-        end
+        tongue_progress = 0
+        tongue_active = false
+        tongue_retracting = false
       end
     elseif not holding_object then
       tongue_progress += 18
@@ -152,6 +143,9 @@ function _update()
         if not tongue_retracting then
           if aabb_collision({ x = tongue_x, y = tongue_y, width = 2, height = 2 }, obj) then
             obj.caught = true
+            obj.x_vel = 0
+            obj.y_vel = 0
+            obj:set_grounded(false)
             obj:del_tag("grabbable")
             add(caught_objects, obj)
             del(uncaught_objects, obj)
@@ -166,19 +160,20 @@ function _update()
       end
     end
 
-    for obj in all(caught_objects) do
-      if obj.caught then
-        local progress = max(0, tongue_progress)
-        obj.x = frog.x + frog_direction + cos(cursor_angle / 360) * (progress * cursor_distance / tongue_max_progress)
-        obj.y = frog.y + sin(cursor_angle / 360) * (progress * cursor_distance / tongue_max_progress)
+  end
 
-        if not tongue_button_down then
+  for obj in all(caught_objects) do
+    if obj.caught then
+      local progress = max(0, tongue_progress)
+      obj.x = frog.x + frog_direction + cos(cursor_angle / 360) * (progress * cursor_distance / tongue_max_progress)
+      obj.y = frog.y + sin(cursor_angle / 360) * (progress * cursor_distance / tongue_max_progress)
+
+      if not tongue_button_down then
+        if tongue_progress > 0 then
+          tongue_active = true
           tongue_retracting = true
-          if tongue_progress <= 0 then
-            drop_caught_object(obj)
-          end
-        elseif tongue_progress <= 0 then
-          tongue_retracting = false
+        else
+          drop_caught_object(obj)
         end
       end
     end
@@ -208,10 +203,10 @@ function _update()
   end
 
   for obj in all(renderables) do
-    if not (obj:is_static() or obj:is_grounded() or obj:get_tag("grabbable")) then
+    if not (obj:is_static() or obj:is_grounded() or obj:get_tag("grabbable") or obj.caught) then
       for other in all(renderables) do
         -- todo, add collision filters instead of this garbage
-        if obj != other and not (obj:has_tag("froglet") and other:has_tag("froglet")) then
+        if obj != other and not other.caught and not (obj:has_tag("froglet") and other:has_tag("froglet")) then
           is_touching_object = check_collision(obj, other)
           if is_touching_object and other != frog then
             obj:del_tag("grabbable")
@@ -231,8 +226,10 @@ function _update()
       end
     end
 
-    obj.x += obj.x_vel
-    obj.y += obj.y_vel
+    if not obj.caught then
+      obj.x += obj.x_vel
+      obj.y += obj.y_vel
+    end
   end
 
   if frog.y_vel < 0 then
@@ -290,8 +287,28 @@ function _draw()
   print("frog ♥ froglets", 1, 1, 7)
 end
 
--- PICO-8 btn() ids used by this cart:
--- 0=left, 1=right, 2=up, 3=down, 4=o/action, 5=x/action.
+-- Named input helpers. Keep raw btn(n) calls here so gameplay code doesn't
+-- have to remember PICO-8's numbered button ids.
+function left_btn()
+  return btn(0)
+end
+
+function right_btn()
+  return btn(1)
+end
+
+function jump_btn()
+  return btn(4)
+end
+
+function touch_btn()
+  return btn(5)
+end
+
+function call_frogs_btn()
+  return btn(3)
+end
+
 function control_cursor()
   -- cursor_btns_pressed stores signed reticle input; the last held button wins.
   local left_pressed = false
@@ -301,13 +318,11 @@ function control_cursor()
     if btn == -1 then right_pressed = true end
   end
 
-  -- btn(4): add positive cursor input while held.
-  if btn(4) and not left_pressed then add(cursor_btns_pressed, 1) end
-  if not btn(4) and left_pressed then del(cursor_btns_pressed, 1) end
+  if left_btn() and not left_pressed then add(cursor_btns_pressed, 1) end
+  if not left_btn() and left_pressed then del(cursor_btns_pressed, 1) end
 
-  -- btn(5): add negative cursor input while held.
-  if btn(5) and not right_pressed then add(cursor_btns_pressed, -1) end
-  if not btn(5) and right_pressed then del(cursor_btns_pressed, -1) end
+  if right_btn() and not right_pressed then add(cursor_btns_pressed, -1) end
+  if not right_btn() and right_pressed then del(cursor_btns_pressed, -1) end
 
   local x_dir = 0
   if #cursor_btns_pressed >= 1 then x_dir = cursor_btns_pressed[#cursor_btns_pressed] end
@@ -329,9 +344,8 @@ function control_cursor()
 end
 
 function control_tongue()
-  -- btn(2): sets the tongue-held flag and starts a shot if none is active.
-  tongue_button_down = btn(2)
-  if tongue_button_down and not tongue_active then
+  tongue_button_down = touch_btn()
+  if tongue_button_down and not tongue_active and not has_caught_object() then
     sfx(0, 0, 0, 5)
     tongue_active = true
     tongue_retracting = false
@@ -339,50 +353,44 @@ function control_tongue()
   end
 end
 
+function has_caught_object()
+  for obj in all(caught_objects) do
+    if obj.caught then return true end
+  end
+  return false
+end
+
 function drop_caught_object(obj)
   obj.caught = false
+  obj.x_vel = 0
+  obj.y_vel = 0
+  obj:set_grounded(false)
   drop_offset = 6 + rnd(2)
   if frog_direction == 1 or (frog_direction == 0 and cursor_angle < 90) then
     obj.x = frog.x + drop_offset
   else
     obj.x = frog.x - drop_offset
   end
-
-  local stack_height = tank_y_end - obj.height / 2
-  for o in all(caught_objects) do
-    if o != obj and abs(o.x - obj.x) < (obj.width + o.width) / 2 then
-      stack_height = min(stack_height, o.y - o.height / 2 - obj.height / 2)
-    end
-  end
-  obj.y = stack_height
+  obj.y = frog.y
 end
 
 function control_frog()
-  -- frog_btns_pressed stores signed left/right input; the last held button wins.
-  local left_pressed = false
-  local right_pressed = false
-  for _, btn in ipairs(frog_btns_pressed) do
-    if btn == 1 then left_pressed = true end
-    if btn == -1 then right_pressed = true end
-  end
-
-  -- btn(1): add positive/right input while held.
-  if btn(1) and not left_pressed then add(frog_btns_pressed, 1) end
-  if not btn(1) and left_pressed then del(frog_btns_pressed, 1) end
-
-  -- btn(0): add negative/left input while held.
-  if btn(0) and not right_pressed then add(frog_btns_pressed, -1) end
-  if not btn(0) and right_pressed then del(frog_btns_pressed, -1) end
-
-  local x_dir = 0
-  -- frog input overrides cursor for facing direction
-  if x_dir != 0 then frog_direction = x_dir end
-
-  -- Grounded launch branch; this runs when any frog input is tracked.
-  if #frog_btns_pressed >= 1 and frog:is_grounded() then
+  if jump_btn() and frog:is_grounded() then
     frog:set_grounded(false)
     frog.x_vel = frog_direction * frog_jump_speed/3
     frog.y_vel = -frog_jump_speed
+  elseif frog:is_grounded() then
+    frog.x_vel = 0
+  elseif left_btn() and not right_btn() then
+    local air_speed_cap = frog_jump_speed / 6
+    if frog.x_vel > -air_speed_cap then
+      frog.x_vel = max(-air_speed_cap, frog.x_vel - frog_move_speed)
+    end
+  elseif right_btn() and not left_btn() then
+    local air_speed_cap = frog_jump_speed / 6
+    if frog.x_vel < air_speed_cap then
+      frog.x_vel = min(air_speed_cap, frog.x_vel + frog_move_speed)
+    end
   elseif abs(frog.x_vel) < 0.01 then
     frog.x_vel = 0
   end

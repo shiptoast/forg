@@ -42,7 +42,7 @@ state, with no Lua module system or package manager.
 - Spawn timer: a falling object every `90` ticks.
 - Physics: gravity `0.12`.
 - Collections: `renderables`, `uncaught_objects`, `caught_objects`,
-  `cursor_btns_pressed`, and `frog_btns_pressed`.
+  `cursor_btns_pressed`, and legacy `frog_btns_pressed`.
 
 The entity list is intentionally simple. Most update and collision behavior
 is driven by tags:
@@ -74,17 +74,20 @@ active, and prints the title text.
 
 ## Controls
 
-The code documents PICO-8 button ids directly:
+The code uses named helpers for PICO-8 button ids. Gameplay code should call
+these helpers instead of raw `btn(n)`:
 
-- `btn(0)`: frog left input.
-- `btn(1)`: frog right input.
-- `btn(2)`: tongue button.
-- `btn(3)`: froglet call button.
-- `btn(4)`: rotate cursor one direction.
-- `btn(5)`: rotate cursor the other direction.
+- `left_btn()` / `btn(0)`: rotate the reticle one direction.
+- `right_btn()` / `btn(1)`: rotate the reticle the other direction.
+- `call_frogs_btn()` / `btn(3)`: call froglets.
+- `jump_btn()` / `btn(4)`: jump.
+- `touch_btn()` / `btn(5)`: tongue catch, hold, and release.
 
-`cursor_btns_pressed` and `frog_btns_pressed` act as input stacks so the last
-held direction wins while multiple buttons are held.
+`btn(2)` is currently unused.
+
+`cursor_btns_pressed` acts as an input stack so the last held reticle
+direction wins while both left and right are held. `frog_btns_pressed` is
+currently initialized but unused.
 
 ## Object And Tongue Details
 
@@ -161,10 +164,8 @@ SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy /home/nick/Development/pico8/pico-8/
 
 ## Known Caveats
 
-- `frog_move_speed` and `drag` are initialized but currently unused.
-- `control_frog()` initializes `x_dir` to `0` and never assigns it from
-  `frog_btns_pressed`; frog jumps still trigger from left/right input, but
-  horizontal direction comes from the current cursor-derived `frog_direction`.
+- `drag` is initialized but currently unused.
+- Jump direction follows the current cursor-derived `frog_direction`.
 - Several values are assigned without `local`, including `grabbable`,
   `draw_color`, `dist`, `is_touching_object`, `dir`, and `drop_offset`.
   PICO-8 accepts this, but accidental globals are easy to introduce here.

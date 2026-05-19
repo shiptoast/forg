@@ -5,13 +5,11 @@ function make_froglet(pos_x, pos_y, target)
     froglet.facing = 1
     froglet:set_tag("froglet", true)
 
-    -- btn(3): current froglet-call binding. While held, grounded froglets
-    -- hop toward their target.
     froglet.update_func = function(self)
       dist = abs(self.target.x - self.x)
       self.facing = (self.target.x >= self.x) and 1 or -1
 
-      if btn(3) and self:is_grounded() and dist > 10 then
+      if call_frogs_btn() and self:is_grounded() and dist > 10 then
         local dx = self.target.x - self.x
         local dy = self.target.y - self.y
         local d = sqrt(dx*dx + dy*dy)
