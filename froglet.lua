@@ -5,7 +5,8 @@ function make_froglet(pos_x, pos_y, target)
     froglet.facing = 1
     froglet:set_tag("froglet", true)
 
-    -- Update: when "down" (btn3) is pressed and on ground, hop toward target
+    -- btn(3): current froglet-call binding. While held, grounded froglets
+    -- hop toward their target.
     froglet.update_func = function(self)
       dist = abs(self.target.x - self.x)
       self.facing = (self.target.x >= self.x) and 1 or -1

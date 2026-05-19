@@ -118,13 +118,10 @@ function _init()
 end
 
 function _update()
-  -- X/O to aim cursor
+  -- Read player input first. The helpers below document each numeric btn()
+  -- call at the point where it is used.
   control_cursor()
-
-  -- up to shoot tongue
   control_tongue()
-
-  -- left/right to move frog
   control_frog()
 
   if tongue_active then
@@ -293,7 +290,10 @@ function _draw()
   print("frog ♥ froglets", 1, 1, 7)
 end
 
+-- PICO-8 btn() ids used by this cart:
+-- 0=left, 1=right, 2=up, 3=down, 4=o/action, 5=x/action.
 function control_cursor()
+  -- cursor_btns_pressed stores signed reticle input; the last held button wins.
   local left_pressed = false
   local right_pressed = false
   for _, btn in ipairs(cursor_btns_pressed) do
@@ -301,9 +301,11 @@ function control_cursor()
     if btn == -1 then right_pressed = true end
   end
 
+  -- btn(4): add positive cursor input while held.
   if btn(4) and not left_pressed then add(cursor_btns_pressed, 1) end
   if not btn(4) and left_pressed then del(cursor_btns_pressed, 1) end
 
+  -- btn(5): add negative cursor input while held.
   if btn(5) and not right_pressed then add(cursor_btns_pressed, -1) end
   if not btn(5) and right_pressed then del(cursor_btns_pressed, -1) end
 
@@ -327,6 +329,7 @@ function control_cursor()
 end
 
 function control_tongue()
+  -- btn(2): sets the tongue-held flag and starts a shot if none is active.
   tongue_button_down = btn(2)
   if tongue_button_down and not tongue_active then
     sfx(0, 0, 0, 5)
@@ -355,6 +358,7 @@ function drop_caught_object(obj)
 end
 
 function control_frog()
+  -- frog_btns_pressed stores signed left/right input; the last held button wins.
   local left_pressed = false
   local right_pressed = false
   for _, btn in ipairs(frog_btns_pressed) do
@@ -362,9 +366,11 @@ function control_frog()
     if btn == -1 then right_pressed = true end
   end
 
+  -- btn(1): add positive/right input while held.
   if btn(1) and not left_pressed then add(frog_btns_pressed, 1) end
   if not btn(1) and left_pressed then del(frog_btns_pressed, 1) end
 
+  -- btn(0): add negative/left input while held.
   if btn(0) and not right_pressed then add(frog_btns_pressed, -1) end
   if not btn(0) and right_pressed then del(frog_btns_pressed, -1) end
 
@@ -372,6 +378,7 @@ function control_frog()
   -- frog input overrides cursor for facing direction
   if x_dir != 0 then frog_direction = x_dir end
 
+  -- Grounded launch branch; this runs when any frog input is tracked.
   if #frog_btns_pressed >= 1 and frog:is_grounded() then
     frog:set_grounded(false)
     frog.x_vel = frog_direction * frog_jump_speed/3
