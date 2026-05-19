@@ -91,7 +91,7 @@ function _init()
   tongue_button_released = false
   tongue_drop_requested = false
   held_object = nil
-  build_label = "pr2 hold v2"
+  build_label = "pr2 move fix v4"
 
   uncaught_objects = {}
   caught_objects = {}
@@ -221,7 +221,7 @@ function _update()
       if not (obj:is_static() or obj:is_grounded() or obj:get_tag("grabbable")) then
         for other in all(renderables) do
           -- todo, add collision filters instead of this garbage
-          if obj != other and not (obj:has_tag("froglet") and other:has_tag("froglet")) then
+          if other != held_object and obj != other and not (obj:has_tag("froglet") and other:has_tag("froglet")) then
             is_touching_object = check_collision(obj, other)
             if is_touching_object and other != frog then
               obj:del_tag("grabbable")
