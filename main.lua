@@ -86,6 +86,12 @@ function _init()
   tongue_retracting = false
   tongue_progress = 0
   tongue_max_progress = 120
+  tongue_button_down = false
+  tongue_button_pressed = false
+  tongue_button_released = false
+  tongue_drop_requested = false
+  held_object = nil
+  build_label = "pr2 hold v2"
 
   uncaught_objects = {}
   caught_objects = {}
@@ -128,24 +134,18 @@ function _update()
   control_frog()
 
   if tongue_active then
-    local holding_object = false
-    for obj in all(caught_objects) do
-      if obj.caught then holding_object = true end
-    end
-
     if tongue_retracting then
       tongue_progress -= 18
       if tongue_progress <= 0 then
-        if holding_object and tongue_button_down then
-          tongue_progress = 0
-          tongue_active = true
+        tongue_progress = 0
+        if held_object != nil then
           tongue_retracting = false
         else
           tongue_active = false
           tongue_retracting = false
         end
       end
-    elseif not holding_object then
+    elseif held_object == nil then
       tongue_progress += 18
 
       local tongue_x = frog.x + cos(cursor_angle / 360) * (tongue_progress * cursor_distance / tongue_max_progress)
@@ -158,6 +158,8 @@ function _update()
             obj:del_tag("grabbable")
             add(caught_objects, obj)
             del(uncaught_objects, obj)
+            held_object = obj
+            tongue_drop_requested = not tongue_button_down
             tongue_retracting = true
             sfx(0, 0, 7, 7)
           end
@@ -169,20 +171,21 @@ function _update()
       end
     end
 
-    for obj in all(caught_objects) do
-      if obj.caught then
-        local progress = max(0, tongue_progress)
-        obj.x = frog.x + frog_direction + cos(cursor_angle / 360) * (progress * cursor_distance / tongue_max_progress)
-        obj.y = frog.y + sin(cursor_angle / 360) * (progress * cursor_distance / tongue_max_progress)
+    if held_object != nil then
+      local progress = max(0, tongue_progress)
+      held_object.x = frog.x + frog_direction + cos(cursor_angle / 360) * (progress * cursor_distance / tongue_max_progress)
+      held_object.y = frog.y + sin(cursor_angle / 360) * (progress * cursor_distance / tongue_max_progress)
+      held_object.x_vel = 0
+      held_object.y_vel = 0
 
-        if not tongue_button_down then
-          tongue_retracting = true
-          if tongue_progress <= 0 then
-            drop_caught_object(obj)
-          end
-        elseif tongue_progress <= 0 then
-          tongue_retracting = false
-        end
+      if tongue_drop_requested and tongue_progress <= 0 then
+        drop_caught_object(held_object)
+        held_object = nil
+        tongue_active = false
+        tongue_retracting = false
+        tongue_drop_requested = false
+      elseif tongue_progress <= 0 then
+        tongue_retracting = false
       end
     end
   end
@@ -211,31 +214,36 @@ function _update()
   end
 
   for obj in all(renderables) do
-    if not (obj:is_static() or obj:is_grounded() or obj:get_tag("grabbable") or obj.caught) then
-      for other in all(renderables) do
-        -- todo, add collision filters instead of this garbage
-        if obj != other and not (obj:has_tag("froglet") and other:has_tag("froglet")) then
-          is_touching_object = check_collision(obj, other)
-          if is_touching_object and other != frog then
-            obj:del_tag("grabbable")
-            obj.caught = false
-            del(caught_objects, obj)
-            dir = resolve_collision(obj, other)
-            if dir == "vertical" and (other == tank_bottom or other:is_grounded()) and other.y > obj.y then
-              obj.y -= 1;
-              obj:set_grounded(true)
+    if obj == held_object then
+      obj.x_vel = 0
+      obj.y_vel = 0
+    else
+      if not (obj:is_static() or obj:is_grounded() or obj:get_tag("grabbable")) then
+        for other in all(renderables) do
+          -- todo, add collision filters instead of this garbage
+          if obj != other and not (obj:has_tag("froglet") and other:has_tag("froglet")) then
+            is_touching_object = check_collision(obj, other)
+            if is_touching_object and other != frog then
+              obj:del_tag("grabbable")
+              obj.caught = false
+              del(caught_objects, obj)
+              dir = resolve_collision(obj, other)
+              if dir == "vertical" and (other == tank_bottom or other:is_grounded()) and other.y > obj.y then
+                obj.y -= 1;
+                obj:set_grounded(true)
+              end
             end
           end
         end
+
+        if not (obj:is_grounded() or obj:is_static() or obj:get_tag("grabbable") == true) then
+          obj.y_vel += gravity
+        end
       end
 
-      if not (obj:is_grounded() or obj:is_static() or obj:get_tag("grabbable") == true) then
-        obj.y_vel += gravity
-      end
+      obj.x += obj.x_vel
+      obj.y += obj.y_vel
     end
-
-    obj.x += obj.x_vel
-    obj.y += obj.y_vel
   end
 
   if frog.y_vel < 0 then
@@ -290,7 +298,9 @@ function _draw()
     line(frog.x + frog_direction, frog.y, tongue_x, tongue_y, 8)
   end
 
-  print("frog ♥ froglets", 1, 1, 7)
+  print("forg " .. build_label, 1, 1, 7)
+  print("btn:" .. debug_flag(tongue_button_down) .. " held:" .. debug_flag(held_object != nil) .. " drop:" .. debug_flag(tongue_drop_requested), 1, 8, 7)
+  print("tongue:" .. debug_tongue_state(), 1, 15, 7)
 end
 
 function control_cursor()
@@ -327,17 +337,43 @@ function control_cursor()
 end
 
 function control_tongue()
+  local was_down = tongue_button_down
   tongue_button_down = btn(2)
-  if tongue_button_down and not tongue_active then
+  tongue_button_pressed = tongue_button_down and not was_down
+  tongue_button_released = was_down and not tongue_button_down
+
+  if tongue_button_released and held_object != nil then
+    tongue_drop_requested = true
+  end
+
+  if tongue_button_pressed and not tongue_active and held_object == nil then
     sfx(0, 0, 0, 5)
     tongue_active = true
     tongue_retracting = false
     tongue_progress = 0
+    tongue_drop_requested = false
   end
+end
+
+function debug_flag(value)
+  if value then return "1" end
+  return "0"
+end
+
+function debug_tongue_state()
+  if held_object != nil and tongue_progress <= 0 then
+    return "holding"
+  elseif tongue_retracting then
+    return "retract"
+  elseif tongue_active then
+    return "extend"
+  end
+  return "idle"
 end
 
 function drop_caught_object(obj)
   obj.caught = false
+  if held_object == obj then held_object = nil end
   drop_offset = 6 + rnd(2)
   if frog_direction == 1 or (frog_direction == 0 and cursor_angle < 90) then
     obj.x = frog.x + drop_offset
