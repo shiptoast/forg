@@ -58,7 +58,7 @@ function _init()
   -- game balance tunables
 
   cursor_rotation_speed = 3 -- degrees per tick
-  frog_move_speed = 0.04 -- airborne x velocity added per tick
+  frog_move_speed = 0.05 -- airborne x velocity added per tick
 
   frog_direction_influence = 25 -- degrees where frog faces fwd per quadrant
 
@@ -76,7 +76,7 @@ function _init()
   tank_x_end = 110
   tank_y_start = 64
   tank_y_end = 96
-  gravity = 0.09
+  gravity = 0.1
   drag = 0.05
 
   cursor_angle = 90
