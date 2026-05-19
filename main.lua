@@ -91,7 +91,7 @@ function _init()
   tongue_button_released = false
   tongue_drop_requested = false
   held_object = nil
-  build_label = "pr2 input fix v5"
+  build_label = "pr2 action isolate v6"
 
   uncaught_objects = {}
   caught_objects = {}
@@ -322,18 +322,6 @@ function control_cursor()
 
   cursor_angle = (cursor_angle + (x_dir * cursor_rotation_speed)) % 360
 
-  -- right-facing
-  local q1_bkpt = 90 - frog_direction_influence
-  local q4_bkpt = 270 + frog_direction_influence
-  local face_right = cursor_angle < q1_bkpt or cursor_angle > q4_bkpt
-  -- left-facing
-  local q2_bkpt = 90 + frog_direction_influence
-  local q3_bkpt = 270 - frog_direction_influence
-  local face_left = cursor_angle > q2_bkpt and cursor_angle < q3_bkpt
-
-  if face_right then frog_direction = 1
-  elseif face_left then frog_direction = -1
-  else frog_direction = 0 end
 end
 
 function control_tongue()
