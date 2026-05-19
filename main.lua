@@ -91,7 +91,7 @@ function _init()
   tongue_button_released = false
   tongue_drop_requested = false
   held_object = nil
-  build_label = "pr2 move fix v4"
+  build_label = "pr2 input fix v5"
 
   uncaught_objects = {}
   caught_objects = {}
@@ -405,14 +405,10 @@ function control_frog()
   if not btn(0) and right_pressed then del(frog_btns_pressed, -1) end
 
   local x_dir = 0
+  if #frog_btns_pressed >= 1 then x_dir = frog_btns_pressed[#frog_btns_pressed] end
+
+  frog.x_vel = frog_move_speed * x_dir
+
   -- frog input overrides cursor for facing direction
   if x_dir != 0 then frog_direction = x_dir end
-
-  if #frog_btns_pressed >= 1 and frog:is_grounded() then
-    frog:set_grounded(false)
-    frog.x_vel = frog_direction * frog_jump_speed/3
-    frog.y_vel = -frog_jump_speed
-  elseif abs(frog.x_vel) < 0.01 then
-    frog.x_vel = 0
-  end
 end
