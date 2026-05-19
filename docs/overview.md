@@ -40,7 +40,7 @@ state, with no Lua module system or package manager.
 - Cursor: angle `90`, distance `32`, rotation speed `3` degrees per tick.
 - Tongue: progress from `0` to `120`, moving in chunks of `18`.
 - Spawn timer: a falling object every `90` ticks.
-- Physics: gravity `0.12`.
+- Physics: gravity `0.09`.
 - Collections: `renderables`, `uncaught_objects`, `caught_objects`,
   `cursor_btns_pressed`, and legacy `frog_btns_pressed`.
 

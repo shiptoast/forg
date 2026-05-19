@@ -76,7 +76,7 @@ function _init()
   tank_x_end = 110
   tank_y_start = 64
   tank_y_end = 96
-  gravity = 0.12
+  gravity = 0.09
   drag = 0.05
 
   cursor_angle = 90
