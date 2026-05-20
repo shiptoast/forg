@@ -1,5 +1,10 @@
 # Updates
 
+## 2026-05-20
+
+- Froglets can now be picked up with the tongue, held in front of the frog,
+  and dropped like other caught objects.
+
 ## 2026-05-19
 
 - Changed tongue behavior so caught objects stay held after the tongue retracts

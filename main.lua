@@ -147,22 +147,8 @@ function _update()
         if tongue_hits_grounded_object(tongue_tip) then
           tongue_progress = scan_progress
           tongue_retracting = true
-        else
-          for obj in all(uncaught_objects) do
-            if not tongue_retracting and aabb_collision(tongue_tip, obj) then
-              tongue_progress = scan_progress
-              obj.caught = true
-              obj.hold_settled = false
-              obj.x_vel = 0
-              obj.y_vel = 0
-              obj:set_grounded(false)
-              obj:del_tag("grabbable")
-              add(caught_objects, obj)
-              del(uncaught_objects, obj)
-              tongue_retracting = true
-              sfx(0, 0, 7, 7)
-            end
-          end
+        elseif catch_tongue_target(tongue_tip, scan_progress) then
+          tongue_retracting = true
         end
       end
 
@@ -326,6 +312,42 @@ function tongue_hits_grounded_object(tongue_tip)
     if obj != frog and obj:is_grounded() and not obj.caught and not obj:get_tag("grabbable") and not obj:has_tag("froglet") then
       if aabb_collision(tongue_tip, obj) then return true end
     end
+  end
+  return false
+end
+
+function catch_tongue_target(tongue_tip, progress)
+  for obj in all(renderables) do
+    if can_catch_with_tongue(obj) and aabb_collision(tongue_tip, obj) then
+      catch_object(obj, progress)
+      return true
+    end
+  end
+  return false
+end
+
+function can_catch_with_tongue(obj)
+  return obj != frog and not obj.caught and (obj:get_tag("grabbable") or obj:has_tag("froglet"))
+end
+
+function catch_object(obj, progress)
+  tongue_progress = progress
+  obj.caught = true
+  obj.hold_settled = false
+  obj.x_vel = 0
+  obj.y_vel = 0
+  obj:set_grounded(false)
+  obj:del_tag("grabbable")
+  if not object_is_tracked_as_caught(obj) then
+    add(caught_objects, obj)
+  end
+  del(uncaught_objects, obj)
+  sfx(0, 0, 7, 7)
+end
+
+function object_is_tracked_as_caught(obj)
+  for tracked_obj in all(caught_objects) do
+    if tracked_obj == obj then return true end
   end
   return false
 end

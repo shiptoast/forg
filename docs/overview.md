@@ -60,10 +60,10 @@ Each `_update()` frame:
 
 1. Reads cursor, tongue, and frog controls.
 2. Extends or retracts the tongue if active.
-3. Scans the extending tongue tip as a 2x2 AABB against grounded blockers and
-   `uncaught_objects`.
-4. Moves caught objects along the tongue until they reach the frog.
-5. Drops a held object near the frog on the next tongue button tap.
+3. Scans the extending tongue tip as a 2x2 AABB against grounded blockers,
+   spawned objects, and froglets.
+4. Moves caught objects or froglets along the tongue until they reach the frog.
+5. Drops a held object or froglet near the frog on the next tongue button tap.
 6. Spawns new falling objects on a timer.
 7. Expires uncaught objects whose timer reaches zero.
 8. Runs the simple O(n^2) collision pass across `renderables`.
@@ -102,12 +102,13 @@ the tank, with random size and color. The accessory factories
 selection logic is commented out, so spawned objects are currently plain
 rectangles.
 
-When a tongue tip hits a grabbable object:
+When a tongue tip hits a grabbable object or froglet:
 
-- The object is removed from `uncaught_objects`.
+- Spawned objects are removed from `uncaught_objects`.
 - Its `grabbable` tag is removed.
 - It is added to `caught_objects`.
-- `obj.caught` is set to `true`.
+- `obj.caught` is set to `true`; for froglets this temporarily pauses their
+  normal movement because caught entities are skipped by the physics pass.
 - The tongue starts retracting.
 
 If the extending tongue hits an existing grounded object before a grabbable
