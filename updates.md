@@ -8,6 +8,8 @@
   than overlapping the frog.
 - While an object is held, the tongue now stays visible from its frog origin
   to the object's center.
+- When a caught object reaches the frog off its final side-hold point, it now
+  lerps horizontally into place instead of snapping.
 - Released objects now drop from frog-face height with gravity instead of
   snapping directly into the stack.
 - Added named input helpers in `main.lua` so gameplay code uses `left_btn()`,

@@ -59,6 +59,7 @@ function _init()
 
   cursor_rotation_speed = 3 -- degrees per tick
   frog_move_speed = 0.05 -- airborne x velocity added per tick
+  held_object_lerp_amount = 0.35
 
   frog_direction_influence = 25 -- degrees where frog faces fwd per quadrant
 
@@ -151,6 +152,7 @@ function _update()
             if not tongue_retracting and aabb_collision(tongue_tip, obj) then
               tongue_progress = scan_progress
               obj.caught = true
+              obj.hold_settled = false
               obj.x_vel = 0
               obj.y_vel = 0
               obj:set_grounded(false)
@@ -416,23 +418,47 @@ end
 
 function position_caught_object(obj)
   local side = held_object_side()
+  local target_x = frog_front_x(obj)
+  local target_y = frog.y
+
+  if obj.hold_settled then
+    obj.x = target_x
+    obj.y = target_y
+    return
+  end
+
   local progress = max(0, tongue_progress)
   local obj_x = frog.x + side + cos(cursor_angle / 360) * (progress * cursor_distance / tongue_max_progress)
   local obj_y = frog.y + sin(cursor_angle / 360) * (progress * cursor_distance / tongue_max_progress)
-  local front_x = frog_front_x(obj)
 
-  if (side == 1 and obj_x < front_x) or (side == -1 and obj_x > front_x) then
-    obj_x = front_x
-    obj_y = frog.y
+  if (side == 1 and obj_x < target_x) or (side == -1 and obj_x > target_x) or not tongue_active then
+    lerp_caught_object_to_target(obj, target_x, target_y)
+    return
   end
 
   obj.x = obj_x
   obj.y = obj_y
 end
 
+function lerp_caught_object_to_target(obj, target_x, target_y)
+  obj.x = lerp(obj.x, target_x, held_object_lerp_amount)
+  obj.y = target_y
+
+  if abs(obj.x - target_x) < 0.25 then
+    obj.x = target_x
+    obj.y = target_y
+    obj.hold_settled = true
+  end
+end
+
+function lerp(start_val, end_val, amount)
+  return start_val + (end_val - start_val) * amount
+end
+
 function drop_caught_object(obj)
   position_caught_object(obj)
   obj.caught = false
+  obj.hold_settled = false
   obj.x_vel = 0
   obj.y_vel = 0
   obj:set_grounded(false)

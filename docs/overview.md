@@ -39,6 +39,7 @@ state, with no Lua module system or package manager.
 - Frog start: `(64, 87)`.
 - Cursor: angle `90`, distance `32`, rotation speed `3` degrees per tick.
 - Tongue: progress from `0` to `120`, moving in chunks of `18`.
+- Held object smoothing: lerp amount `0.35`.
 - Spawn timer: a falling object every `90` ticks.
 - Physics: gravity `0.1`.
 - Collections: `renderables`, `uncaught_objects`, `caught_objects`,
@@ -114,10 +115,12 @@ object, the tongue retracts without catching anything behind that blocker.
 
 If the tongue reaches the frog with an object, the caught object is held just
 outside the frog's front edge, using the frog and object half-widths like a
-collision boundary. While an object is held, the tongue line is drawn from its
-frog origin to the object's center. The next `touch_btn()` tap drops it from
-that held position so gravity and collision settle it. If nothing is held, a
-`touch_btn()` tap shoots the tongue.
+collision boundary. If the tongue path does not land exactly on that final
+side-hold point, the object lerps horizontally into place. While an object is
+held, the tongue line is drawn from its frog origin to the object's center.
+The next `touch_btn()` tap drops it from that held position so gravity and
+collision settle it. If nothing is held, a `touch_btn()` tap shoots the
+tongue.
 
 ## Running And Exporting
 
