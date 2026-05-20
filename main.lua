@@ -171,15 +171,6 @@ function _update()
 
   end
 
-  for obj in all(caught_objects) do
-    if obj.caught then
-      local progress = max(0, tongue_progress)
-      obj.x = frog.x + frog_direction + cos(cursor_angle / 360) * (progress * cursor_distance / tongue_max_progress)
-      obj.y = frog.y + sin(cursor_angle / 360) * (progress * cursor_distance / tongue_max_progress)
-
-    end
-  end
-
   -- Spawn objects periodically
   object_spawn_timer += 1
   if object_spawn_timer >= object_spawn_interval then
@@ -230,6 +221,12 @@ function _update()
     if not obj.caught then
       obj.x += obj.x_vel
       obj.y += obj.y_vel
+    end
+  end
+
+  for obj in all(caught_objects) do
+    if obj.caught then
+      position_caught_object(obj)
     end
   end
 
@@ -396,18 +393,38 @@ function has_caught_object()
   return false
 end
 
+function held_object_side()
+  if frog_direction != 0 then return frog_direction end
+  if cos(cursor_angle / 360) >= 0 then return 1 end
+  return -1
+end
+
+function frog_front_x(obj)
+  return frog.x + held_object_side() * (frog.width / 2 + obj.width / 2)
+end
+
+function position_caught_object(obj)
+  local side = held_object_side()
+  local progress = max(0, tongue_progress)
+  local obj_x = frog.x + side + cos(cursor_angle / 360) * (progress * cursor_distance / tongue_max_progress)
+  local obj_y = frog.y + sin(cursor_angle / 360) * (progress * cursor_distance / tongue_max_progress)
+  local front_x = frog_front_x(obj)
+
+  if (side == 1 and obj_x < front_x) or (side == -1 and obj_x > front_x) then
+    obj_x = front_x
+    obj_y = frog.y
+  end
+
+  obj.x = obj_x
+  obj.y = obj_y
+end
+
 function drop_caught_object(obj)
+  position_caught_object(obj)
   obj.caught = false
   obj.x_vel = 0
   obj.y_vel = 0
   obj:set_grounded(false)
-  drop_offset = 6 + rnd(2)
-  if frog_direction == 1 or (frog_direction == 0 and cursor_angle < 90) then
-    obj.x = frog.x + drop_offset
-  else
-    obj.x = frog.x - drop_offset
-  end
-  obj.y = frog.y
 end
 
 function control_frog()

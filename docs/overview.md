@@ -112,10 +112,11 @@ When a tongue tip hits a grabbable object:
 If the extending tongue hits an existing grounded object before a grabbable
 object, the tongue retracts without catching anything behind that blocker.
 
-If the tongue reaches the frog with an object, the caught object stays attached
-at the frog. The next `touch_btn()` tap drops it near frog-face height so
-gravity and collision settle it. If nothing is held, a `touch_btn()` tap shoots
-the tongue.
+If the tongue reaches the frog with an object, the caught object is held just
+outside the frog's front edge, using the frog and object half-widths like a
+collision boundary. The next `touch_btn()` tap drops it from that held position
+so gravity and collision settle it. If nothing is held, a `touch_btn()` tap
+shoots the tongue.
 
 ## Running And Exporting
 
@@ -175,8 +176,8 @@ SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy /home/nick/Development/pico8/pico-8/
 - `drag` is initialized but currently unused.
 - Jump direction follows the current cursor-derived `frog_direction`.
 - Several values are assigned without `local`, including `grabbable`,
-  `draw_color`, `dist`, `is_touching_object`, `dir`, and `drop_offset`.
-  PICO-8 accepts this, but accidental globals are easy to introduce here.
+  `draw_color`, `dist`, `is_touching_object`, and `dir`. PICO-8 accepts this,
+  but accidental globals are easy to introduce here.
 - `check_all_collisions()` appears to be unused legacy scaffolding and calls
   `shouldCollideWith()` and `onCollision()`, which `Entity` does not define.
 - The current collision pass is O(n^2) over `renderables` and relies on a few
