@@ -70,8 +70,8 @@ Each `_update()` frame:
 10. Updates each froglet.
 
 Each `_draw()` frame clears the screen, draws renderables, draws frog eyes
-based on `frog_direction`, draws the cursor, draws the tongue line when
-active, and prints the title text.
+based on `frog_direction`, draws the cursor, draws the tongue line when active
+or holding an object, and prints the title text.
 
 ## Controls
 
@@ -114,9 +114,10 @@ object, the tongue retracts without catching anything behind that blocker.
 
 If the tongue reaches the frog with an object, the caught object is held just
 outside the frog's front edge, using the frog and object half-widths like a
-collision boundary. The next `touch_btn()` tap drops it from that held position
-so gravity and collision settle it. If nothing is held, a `touch_btn()` tap
-shoots the tongue.
+collision boundary. While an object is held, the tongue line is drawn from its
+frog origin to the object's center. The next `touch_btn()` tap drops it from
+that held position so gravity and collision settle it. If nothing is held, a
+`touch_btn()` tap shoots the tongue.
 
 ## Running And Exporting
 

@@ -274,12 +274,15 @@ function _draw()
 
   circ(cursor_x, cursor_y, 2, 8)
 
-  if tongue_active then
+  local held_obj = held_caught_object()
+  if held_obj != nil then
+    line(tongue_origin_x(), frog.y, held_obj.x, held_obj.y, 8)
+  elseif tongue_active then
     local progress = max(0, tongue_progress)
     local tongue_x = frog.x + cos(cursor_angle / 360) * (progress * cursor_distance / tongue_max_progress)
     local tongue_y = frog.y + sin(cursor_angle / 360) * (progress * cursor_distance / tongue_max_progress)
 
-    line(frog.x + frog_direction, frog.y, tongue_x, tongue_y, 8)
+    line(tongue_origin_x(), frog.y, tongue_x, tongue_y, 8)
   end
 
   print("frog ♥ froglets", 1, 1, 7)
@@ -386,11 +389,19 @@ function control_tongue()
   end
 end
 
-function has_caught_object()
+function held_caught_object()
   for obj in all(caught_objects) do
-    if obj.caught then return true end
+    if obj.caught then return obj end
   end
-  return false
+  return nil
+end
+
+function has_caught_object()
+  return held_caught_object() != nil
+end
+
+function tongue_origin_x()
+  return frog.x + frog_direction
 end
 
 function held_object_side()
